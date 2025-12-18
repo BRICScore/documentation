@@ -1,0 +1,30 @@
+\documentclass[]{scrreprt}
+
+\usepackage[a4paper, margin=2cm, headsep=24pt, headheight = 8cm]{geometry}
+\usepackage[]{graphicx}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{minted}
+\setdefaultlanguage{polish}
+
+\setmainfont{Latin Modern Roman}
+\setsansfont{Latin Modern Sans}[]
+\setmonofont{Latin Modern Mono}
+
+\lstset{basicstyle=\ttfamily\small, frame=single,breaklines=true}
+
+\title{\textbf{Dokumentacja techniczna projektu} \\ [0.4em] \large{\textbf{Dokumentacja projektu grupowego \\ID-346 - Analiza bio-sygnałów do identyfikacji osób}} }
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\include{conventions.tex}
+	
+\end{document}
