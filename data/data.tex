@@ -12,7 +12,65 @@
 % etapy:
 % I.handle input data, MJ
 % II.breath separation, JD
+\subsection{Oddzielanie oddechów}
+Celem tego etapu jest wstępne podzielenie sygnału na mniejsze części reprezentujące
+kolejne oddechy w analizowaynm pomiarze. Realizowane jest to poprzez wyznaczenie 
+wszystkich maksymów i minimów lokalnych oraz zapisanie ich w programie tak, by
+przygotować je do dalszej obróbki.
+
+\begin{itemize}
+    \item \textbf{Dane wejściowe:} \\
+    Zbiór wartości odstawania od średniej wartości sygnału na danym pasie, dla każdego
+    pasa w kamizelce pomiarowej. Każda z tych wartości przypisany ma odpowiedni 
+    znacznik czasu od rozpoczęcia pomiaru, w którym pobrano próbkę.
+    \item \textbf{Dane wyjściowe:} \\
+    Zbiór punktów reprezentujących wszystkie maksyma i minima lokalne sygnału 
+    wraz z przypisanymi im wartościami znaczników czasu.
+\end{itemize}
+
 % III.outlier detection, MJ
 % IV.split data into segments, MJ
 % V.feature extraction, JD
+\subsection{Ekstrakcja cech}
+Po podzieleniu danych na segmenty, a więc ostatecznym przygotowaniu ich 
+do analizy, należy rozpocząć proces pozyskiwania informacji potrzebnych do 
+prawidłowego działania klasyfikatora. Sama sieć neuronowa nie potrzebuje 
+zdefiniowanych cech sygnału, by funkcjonować, jednak w celach badawczych, 
+zdecydowano się na ich ekstrakcję ze względu na możliwość sprawdzenia różnic
+we wzorcach oddechowych objętych analizą osób.
+
+\begin{itemize}
+    \item \textbf{Dane wejściowe:} \\
+    Zbiór plików zawierających podzielone na segmenty dane z pomiarów po 
+    wszystkich przekształceniach, w których nazwa wyznacza etykietę, ponieważ 
+    zawiera typ aktywności oraz identyfikator osoby
+    \item \textbf{Dane wyjściowe:} \\
+    Plik wyjściowy
+    \texttt{extracted\_features.jsonl}
+    w formacie
+    \texttt{.jsonl}, zawierający wektory 
+    cech wyznaczone dla kolejnych segmentów danych pomiarowych. 
+\end{itemize}
+
+\noindent\textbf{Cechy składające się na wektor dla segmentu:}
+
+\begin{itemize}
+    \item \texttt{bpm} - liczba oddechów na minutę
+    \item \texttt{breath\_depth} - wyznaczone poprzez uśrednienie wartości szczytów 
+    oddechów w całym segmencie dla środkowego pasa
+    \item \texttt{breath\_depth\_std} - odchylenie standardowe sygnału, jako głębokość 
+    oddechu dla środkowego pasa
+    \item \texttt{belt\_share} - udział poszczególnych pasów w oddychaniu, reprezentowany 
+    przez 5 wartości, po jednej dla każdego pasa. Jest on wyznaczany poprzez 
+    zsumowanie wartości głębokości oddechu dla każdego pasa, tworzy to mianownik 
+    ułamka, który liczony jest osobno dla każdego tensometru, gdzie licznikiem jest 
+    głębokość oddechu dla tego konkretnego sensora
+    \item \texttt{belt\_share\_std} - wyznaczany jest on analogicznie do powyższego, korzysta 
+    jednak z wyżej wspomnianych odchyleń standardowych sygnału, jako głębokości
+    \item \texttt{breathing\_phase\_lengths} - jest to wartość średnia czasu trwania kolejnych 
+    faz oddychania, a mianowicie: faza wdechu, pauza po wdechu, faza wydechu, 
+    pauza po wydechu
+\end{itemize}
+
 % VI. Visualization (separate) JD
+\section{Wizualizacja danych}
