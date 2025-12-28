@@ -74,3 +74,43 @@ we wzorcach oddechowych objętych analizą osób.
 
 % VI. Visualization (separate) JD
 \section{Wizualizacja danych}
+Aby zweryfikować poprawność całego procesu przetwarzania 
+należało w odpowiedni sposób zwizualizować dane pozyskane w ramach 
+projektu. Jest to niezbędny etap, gdyż pozwala na ewaluację  
+postępów. \\\\
+\textbf{Trzy główe cele etapu to:}
+\begin{enumerate}
+    \item \textbf{Weryfikacja rozróżnialności osób po przetwarzaniu}
+    - Aby móc zweryfikować poprawność procesu przetwarzania, trzeba zwizualizować 
+    zebrane dane. Jest to realizowane za pomocą algorytmów redukujących liczbę cech. 
+    W tym przypadku ich liczba, w celach poglądowych, obniżana jest do dwóch. Dzięki 
+    tym wartościom jesteśmy w stanie wyznaczyć kierunek, będący transformacją macierzy 
+    danych, który spowoduje największe możliwe zróżnicowanie zbioru danych. Zakładając
+    więc, że różnice we wzorcach oddechowych między różnymi osobami będą 
+    stosunkowo dużo większe niż między różnymi momentami dla tej samej osoby, jesteśmy
+    w stanie uzyskać odpowiednią, wizualną separację danych, zgodną z etykietami.
+    % najlepiej w tym miejscu umieścić przykładowy wykres
+    \item \textbf{Wyznaczenie najbardziej istotnych cech dla klasyfikatora}
+    - W celu wyżej wspomnianej weryfikacji przetwarzania danych, należało zredukować 
+    liczbę wymiarów wektora cech, tak by ten mógł zostać przedstawiony w sposób możliwy 
+    do analizy przez człowieka. Zostały więc wyznaczone w ten sposób najbardziej istotne 
+    elementy sygnału. Dzięki temu jesteśmy w stanie zredukować ostateczną ich liczbę, co
+    pozytywnie wpływa na ryzyko zbytniego dopasowania oraz pozwala na mniejszy nakład 
+    obliczeniowy związany np. ze skorelowanymi zmiennymi.
+    % najlepiej w tym miejscu umieścić przykładowy wykres
+    \item \textbf{Kontrola jakości przez prosty klasyfikator}
+    - Ostatnim celem Wizualizacji jest kontrola jakości rozwiązania dzięki klasyfikatorowi. 
+    Skorzystano więc z prostego klasyfikatora binarnego: \textbf{SVM}, który wykorzystywany 
+    jest do porównaniu zbiorów danych o dwóch różnych etykietach. Przy okazji wizualizacji 
+    wyznaczana jest też wartość liczbowa dokładności takiego klasyfikatora. Użycie tego 
+    konkretnego algorytmu pozwoli na podkreślenie ewentualnych problematycznych par podobnych 
+    zbiorów danych. Dodatkowo, dokonywana jest również ewaluacja za pomocą sieci \textbf{LSTM}.
+\end{enumerate}
+
+\noindent\textbf{Opis przeprowadzonej ewaluacji}
+
+\subsection{SVM - Support Vector Machine}
+not yet
+
+\subsection{LSTM - Long Short-Term Memory}
+not yet
