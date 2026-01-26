@@ -2,6 +2,7 @@
 
 \usepackage[a4paper, margin=2cm, headsep=24pt, headheight = 8cm]{geometry}
 \usepackage[]{graphicx}
+\graphicspath{{./images/}}
 \usepackage{fontspec}
 \usepackage{polyglossia}
 \usepackage{microtype}
@@ -18,13 +19,15 @@
 \lstset{basicstyle=\ttfamily\small, frame=single,breaklines=true}
 
 \title{\textbf{Dokumentacja techniczna projektu} \\ [0.4em] \large{\textbf{Dokumentacja projektu grupowego \\ID-346 - Analiza bio-sygnałów do identyfikacji osób}} }
-
+\author{Mikołaj Kuźmicz 198291, Jakub Dąbrowski 197629, Mikołaj Jaworski 197636}
 \date{}
 
 \begin{document}
 
 \maketitle
 
-\include{conventions.tex}
-	
+\include{conventions/conventions.tex}
+\include{data/data.tex}
+\include{code/code.tex}
+
 \end{document}

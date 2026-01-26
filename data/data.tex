@@ -1,0 +1,148 @@
+\chapter{Dane}
+
+% opis kształtu i znaczenia danych
+% 1.dane (co mierzymy, jak to wygląda, co uzyskujemy)
+\section{Obiekt pomiaru}
+% mierzymy wartości z tensometru przetwornikami ADC kamizelką
+% wygląd danych - naciąg każdego z pasów
+% uzyskujemy - linie jsonl z wartościami kolejnych próbek
+
+% 2.transformacje danych (przejscia pomiedzy etapami) - Flow
+\section{Etapy przetwarzania danych}
+% etapy:
+% I.handle input data, MJ
+% II.breath separation, JD
+\subsection{Oddzielanie oddechów}
+Celem tego etapu jest wstępne podzielenie sygnału na mniejsze części reprezentujące
+kolejne oddechy w analizowaynm pomiarze. Realizowane jest to poprzez wyznaczenie 
+wszystkich maksymów i minimów lokalnych oraz zapisanie ich w programie tak, by
+przygotować je do dalszej obróbki.
+
+\begin{itemize}
+    \item \textbf{Dane wejściowe:} \\
+    Zbiór wartości odstawania od średniej wartości sygnału na danym pasie, dla każdego
+    pasa w kamizelce pomiarowej. Każda z tych wartości przypisany ma odpowiedni 
+    znacznik czasu od rozpoczęcia pomiaru, w którym pobrano próbkę.
+    \item \textbf{Dane wyjściowe:} \\
+    Zbiór punktów reprezentujących wszystkie maksyma i minima lokalne sygnału 
+    wraz z przypisanymi im wartościami znaczników czasu.
+\end{itemize}
+
+% III.outlier detection, MJ
+% IV.split data into segments, MJ
+% V.feature extraction, JD
+\subsection{Ekstrakcja cech}
+Po podzieleniu danych na segmenty, a więc ostatecznym przygotowaniu ich 
+do analizy, należy rozpocząć proces pozyskiwania informacji potrzebnych do 
+prawidłowego działania klasyfikatora. Sama sieć neuronowa nie potrzebuje 
+zdefiniowanych cech sygnału, by funkcjonować, jednak w celach badawczych, 
+zdecydowano się na ich ekstrakcję ze względu na możliwość sprawdzenia różnic
+we wzorcach oddechowych objętych analizą osób.
+
+\begin{itemize}
+    \item \textbf{Dane wejściowe:} \\
+    Zbiór plików zawierających podzielone na segmenty dane z pomiarów po 
+    wszystkich przekształceniach, w których nazwa wyznacza etykietę, ponieważ 
+    zawiera typ aktywności oraz identyfikator osoby
+    \item \textbf{Dane wyjściowe:} \\
+    Plik wyjściowy
+    \texttt{extracted\_features.jsonl}
+    w formacie
+    \texttt{.jsonl}, zawierający wektory 
+    cech wyznaczone dla kolejnych segmentów danych pomiarowych. 
+\end{itemize}
+
+\noindent\textbf{Cechy składające się na wektor dla segmentu:}
+
+\begin{itemize}
+    \item \texttt{bpm} - liczba oddechów na minutę
+    \item \texttt{breath\_depth} - wyznaczone poprzez uśrednienie wartości szczytów 
+    oddechów w całym segmencie dla środkowego pasa
+    \item \texttt{breath\_depth\_std} - odchylenie standardowe sygnału, jako głębokość 
+    oddechu dla środkowego pasa
+    \item \texttt{belt\_share} - udział poszczególnych pasów w oddychaniu, reprezentowany 
+    przez 5 wartości, po jednej dla każdego pasa. Jest on wyznaczany poprzez 
+    zsumowanie wartości głębokości oddechu dla każdego pasa, tworzy to mianownik 
+    ułamka, który liczony jest osobno dla każdego tensometru, gdzie licznikiem jest 
+    głębokość oddechu dla tego konkretnego sensora
+    \item \texttt{belt\_share\_std} - wyznaczany jest on analogicznie do powyższego, korzysta 
+    jednak z wyżej wspomnianych odchyleń standardowych sygnału, jako głębokości
+    \item \texttt{breathing\_phase\_lengths} - jest to wartość średnia czasu trwania kolejnych 
+    faz oddychania, a mianowicie: faza wdechu, pauza po wdechu, faza wydechu, 
+    pauza po wydechu
+\end{itemize}
+
+% VI. Visualization (separate) JD
+\section{Wizualizacja danych}
+Aby zweryfikować poprawność całego procesu przetwarzania 
+należało w odpowiedni sposób zwizualizować dane pozyskane w ramach 
+projektu. Jest to niezbędny etap, gdyż pozwala na ewaluację  
+postępów. \\\\
+\textbf{Trzy główe cele etapu to:}
+\begin{enumerate}
+    \item \textbf{Weryfikacja rozróżnialności osób po przetwarzaniu}
+    - Aby móc zweryfikować poprawność procesu przetwarzania, trzeba zwizualizować 
+    zebrane dane. Jest to realizowane za pomocą algorytmów redukujących liczbę cech: 
+    \textbf{MDS} oraz \textbf{PCA}. 
+    W tym podpunkcie liczba składowych, w celach poglądowych, obniżana jest do dwóch. Dzięki 
+    tym wartościom jesteśmy w stanie wyznaczyć kierunek, będący transformacją macierzy 
+    danych, który spowoduje największe możliwe zróżnicowanie zbioru danych. Zakładając
+    więc, że różnice we wzorcach oddechowych między różnymi osobami będą 
+    stosunkowo dużo większe niż między różnymi momentami dla tej samej osoby, jesteśmy
+    w stanie uzyskać odpowiednią, wizualną separację danych, zgodną z etykietami.
+    % najlepiej w tym miejscu umieścić przykładowy wykres
+    \item \textbf{Wyznaczenie najbardziej istotnych cech dla klasyfikatora}
+    - W celu wyżej wspomnianej weryfikacji przetwarzania danych, należało zredukować 
+    liczbę wymiarów wektora cech, tak by ten mógł zostać przedstawiony w sposób możliwy 
+    do analizy przez człowieka. Zostały więc wyznaczone w ten sposób najbardziej istotne 
+    elementy sygnału. Dzięki temu jesteśmy w stanie zredukować ostateczną ich liczbę, co
+    pozytywnie wpływa na ryzyko zbytniego dopasowania oraz pozwala na mniejszy nakład 
+    obliczeniowy związany np. ze skorelowanymi zmiennymi.
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \includegraphics[width=0.7\textwidth]{MDS.png}
+        \captionof{figure}{Cechy po wywołaniu algorytmu MDS przedstawione na dwuwymiarowym wykresie.}
+    \end{minipage}
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \includegraphics[width=0.7\textwidth]{PCA.png}
+        \captionof{figure}{Cechy po wywołaniu algorytmu PCA przedstawione na dwuwymiarowym wykresie.}
+    \end{minipage}
+    
+    \item \textbf{Kontrola jakości przez prosty klasyfikator}
+    - Ostatnim celem Wizualizacji jest kontrola jakości rozwiązania dzięki klasyfikatorowi. 
+    Skorzystano więc z prostego klasyfikatora binarnego: \textbf{SVM}, który wykorzystywany 
+    jest do porównaniu zbiorów danych o dwóch różnych etykietach. Przy okazji wizualizacji 
+    wyznaczana jest też wartość liczbowa dokładności takiego klasyfikatora. Użycie tego 
+    konkretnego algorytmu pozwoli na podkreślenie ewentualnych problematycznych par podobnych 
+    zbiorów danych. Dodatkowo, dokonywana jest również ewaluacja za pomocą sieci \textbf{LSTM}.
+\end{enumerate}
+
+\noindent\textbf{Opis przeprowadzonej ewaluacji}
+
+\subsection{SVM - Support Vector Machine}
+Za pomocą klasyfikatora SVM, jesteśmy w stanie podzielić zbiór na dwa, poprzez znalezienie
+odpowiedniej hiperpłaszczyzny maksymalizującej margines między dwoma klasami. W związku z tym, że
+jest on klasyfikatorem binarnym, należało wywołać go osobno dla każdej możliwej pary etykiet w
+ogólnym zbiorze zredukowanych cech. W ten sposób uzyskujemy podział dla wszystkich kombinacji
+oraz związaną z nimi dokładność. Poniżej przykłady dla zbioru danych 3 osób.
+\\
+\includegraphics{JD_MJ.png}
+\\
+Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MJ\_sit: 95.56\%}
+\\
+\includegraphics{JD_MK.png}
+\\
+Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MK\_sit: 84.93\%}
+\\
+\includegraphics{MJ_MK.png}
+\\
+Zmierzona dokładność: \texttt{Accuracy for MJ\_sit and MK\_sit: 91.07\%}
+\\
+% najlepiej w tym miejscu umieścić przykładowy wykres
+
+\subsection{LSTM - Long Short-Term Memory}
+not yet
+% najlepiej w tym miejscu umieścić przykładowy wykres
