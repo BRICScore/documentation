@@ -98,7 +98,19 @@ postępów. \\\\
     elementy sygnału. Dzięki temu jesteśmy w stanie zredukować ostateczną ich liczbę, co
     pozytywnie wpływa na ryzyko zbytniego dopasowania oraz pozwala na mniejszy nakład 
     obliczeniowy związany np. ze skorelowanymi zmiennymi.
-    % najlepiej w tym miejscu umieścić przykładowy wykres
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \includegraphics[width=0.7\textwidth]{MDS.png}
+        \captionof{figure}{Cechy po wywołaniu algorytmu MDS przedstawione na dwuwymiarowym wykresie.}
+    \end{minipage}
+
+    \begin{minipage}{\linewidth}
+        \centering
+        \includegraphics[width=0.7\textwidth]{PCA.png}
+        \captionof{figure}{Cechy po wywołaniu algorytmu PCA przedstawione na dwuwymiarowym wykresie.}
+    \end{minipage}
+    
     \item \textbf{Kontrola jakości przez prosty klasyfikator}
     - Ostatnim celem Wizualizacji jest kontrola jakości rozwiązania dzięki klasyfikatorowi. 
     Skorzystano więc z prostego klasyfikatora binarnego: \textbf{SVM}, który wykorzystywany 
@@ -111,7 +123,24 @@ postępów. \\\\
 \noindent\textbf{Opis przeprowadzonej ewaluacji}
 
 \subsection{SVM - Support Vector Machine}
-not yet
+Za pomocą klasyfikatora SVM, jesteśmy w stanie podzielić zbiór na dwa, poprzez znalezienie
+odpowiedniej hiperpłaszczyzny maksymalizującej margines między dwoma klasami. W związku z tym, że
+jest on klasyfikatorem binarnym, należało wywołać go osobno dla każdej możliwej pary etykiet w
+ogólnym zbiorze zredukowanych cech. W ten sposób uzyskujemy podział dla wszystkich kombinacji
+oraz związaną z nimi dokładność. Poniżej przykłady dla zbioru danych 3 osób.
+\\
+\includegraphics{JD_MJ.png}
+\\
+Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MJ\_sit: 95.56\%}
+\\
+\includegraphics{JD_MK.png}
+\\
+Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MK\_sit: 84.93\%}
+\\
+\includegraphics{MJ_MK.png}
+\\
+Zmierzona dokładność: \texttt{Accuracy for MJ\_sit and MK\_sit: 91.07\%}
+\\
 % najlepiej w tym miejscu umieścić przykładowy wykres
 
 \subsection{LSTM - Long Short-Term Memory}
