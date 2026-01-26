@@ -11,6 +11,81 @@
 \section{Etapy przetwarzania danych}
 % etapy:
 % I.handle input data, MJ
+\subsection{Obsługa danych wejściowych i wstępne przetwarzanie}
+Pierwszym etapem przetwarzania danych jest ich wczytanie oraz odpowiednie
+sformatowanie. Dane, zgodnie z opisem w sekcji 1, są przechowywane w 
+plikach \texttt{.jsonl}. Każda linia reprezentuje pojedynczą próbkę zarejestrowaną
+przez kamizelkę pomiarową.
+
+Wczytywanie odbywa się sekwencyjnie. Każda linia zawiera surowe dane czasowe
+(godziny, minuty, sekundy, milisekundy), 24-bitowe wartości z pięciu
+przetworników ADC (podzielone na trzy 8-bitowe składowe) oraz dane z czujników
+inercyjnych IMU. Poniżej przedstawiono przykładowy format surowej próbki:
+
+\begin{verbatim}
+    "hrs": 0, "min": 0, "sec": 13, "ms": 457,
+    "adc1_output_23_to_16": 240, "adc1_output_15_to_8": 8,
+    "adc1_output_7_to_0": 165, "adc2_output_23_to_16": 255,
+    "adc2_output_15_to_8": 36, "adc2_output_7_to_0": 15,
+    "adc3_output_23_to_16": 243, "adc3_output_15_to_8": 99,
+    "adc3_output_7_to_0": 199, "adc4_output_23_to_16": 253,
+    "adc4_output_15_to_8": 161, "adc4_output_7_to_0": 55,
+    "adc5_output_23_to_16": 238, "adc5_output_15_to_8": 46,
+    "adc5_output_7_to_0": 1, "imu1_output_acc_x": 2384,
+    "imu1_output_acc_y": 237, "imu1_output_acc_z": 16526,
+    "imu1_output_gyr_x": -12, "imu1_output_gyr_y": -11,
+    "imu1_output_gyr_z": 17, "imu2_output_acc_x": 3021,
+    "imu2_output_acc_y": 888, "imu2_output_acc_z": 16327,
+    "imu2_output_gyr_x": -1, "imu2_output_gyr_y": -31,
+    "imu2_output_gyr_z": 17, "imu3front_output_acc_x": 5654,
+    "imu3front_output_acc_y": 866, "imu3front_output_acc_z": 15351,
+    "imu3front_output_gyr_x": -2, "imu3front_output_gyr_y": 7,
+    "imu3front_output_gyr_z": -5, "imu3back_output_acc_x": -831,
+    "imu3back_output_acc_y": -2094, "imu3back_output_acc_z": 16238,
+    "imu3back_output_gyr_x": 2, "imu3back_output_gyr_y": 9,
+    "imu3back_output_gyr_z": -9, "imu4_output_acc_x": 1997,
+    "imu4_output_acc_y": 655, "imu4_output_acc_z": 15972,
+    "imu4_output_gyr_x": -5, "imu4_output_gyr_y": -4,
+    "imu4_output_gyr_z": -2, "imu5_output_acc_x": -768,
+    "imu5_output_acc_y": 437, "imu5_output_acc_z": 16111,
+    "imu5_output_gyr_x": -3, "imu5_output_gyr_y": 3,
+    "imu5_output_gyr_z": 7, "output_status_adc1": true,
+    "output_status_adc2": true, "output_status_adc3": true,
+    "output_status_adc4": true, "output_status_adc5": true,
+    "output_status_imu1": true, "output_status_imu2": true,
+    "output_status_imu3front": true, "output_status_imu3back": true,
+    "output_status_imu4": true, "output_status_imu5": true,
+    "output_status_padding": 0
+\end{verbatim}
+
+W celu ułatwienia dalszej obróbki, każda z tych linii jest parsowana do wewnętrznej
+struktury danych. Proces ten obejmuje połączenie trzech 8-bitowych rejestrów każdego
+z pięciu kanałów ADC w jedną wartość liczbową, która następnie jest przeliczana
+na napięcie (wolty) zgodnie ze specyfikacją zastosowanych tensometrów.
+
+\subsubsection{Struktura danych wynikowych}
+Po wstępnym przetworzeniu dane są normalizowane i zapisywane w formie uproszczonych 
+obiektów JSON, które stanowią podstawową jednostkę danych w dalszych etapach projektu. 
+Przykładowy format przetworzonego segmentu (np. 2-minutowego) wygląda następująco:
+
+\begin{verbatim}
+{
+  "timestamp": 0,
+  "adc_outputs": [
+    0.0002464437, 
+    0.0003881085, 
+    0.0004560553, 
+    -1.75746999e-05, 
+    0.0002706136
+  ]
+}
+\end{verbatim}
+
+Tu warto dodać, że dla większości obliczeń wykonywanych w dalszych etapach takich jako
+wyciąganie cech, separacja oddechów czy wykrywanie anomalii pracujemy na sygnale dla środkowego ADC,
+eksperymentalnie ustaliliśmy, że jest on najbardziej miarodajny w kontekście analizy oddechu,
+a praca z jednym czujnikiem znacznie upraszcza cały proces.
+
 % II.breath separation, JD
 \subsection{Oddzielanie oddechów}
 Celem tego etapu jest wstępne podzielenie sygnału na mniejsze części reprezentujące
@@ -29,7 +104,72 @@ przygotować je do dalszej obróbki.
 \end{itemize}
 
 % III.outlier detection, MJ
+
+\subsection{Wykrywanie anomalii}
+Kolejnym kluczowym etapem jest identyfikacja oraz eliminacja anomalii 
+(ang. \textit{outlier detection}). Sygnał z czujników tensometrycznych w kamizelce 
+jest podatny na zakłócenia wynikające z nagłych ruchów użytkownika, poprawiania kamizelki 
+czy chwilowych błędów transmisji danych. W ten sposób mogą pojawić się oddechy o 
+nietypowych wartościach, które mogą negatywnie wpłynąć na jakość analizy i klasyfikacji.
+
+Proces ich wykrywania i usuwania opiera się na analizie statystycznej zbioru wyznaczonych 
+wcześniej ekstremów (maksimów i minimów) oraz odległości czasowych między nimi.
+
+\begin{itemize} 
+    \item \textbf{Kryteria wykrywania anomalii:}
+        \begin{itemize} 
+            \item \textbf{Amplituda:}
+                Odrzucane są oddechy o wartościach należących do górnych i dolnych kwartyli rozkładu amplitud. 
+                Obecnie odrzucamy około jeden procent oddechów z każdej strony rozkładu. 
+            \item \textbf{Częstotliwość:} 
+                Odrzucane są oddechy o zbyt krótkich oraz długich odległościach między wykrytymi wcześniej
+                maksymami. Obecnie odrzucamy około jeden procent oddechów z każdej strony rozkładu.
+        \end{itemize}
+    \item \textbf{Dane wejściowe:} \\
+        Zbiór par (znacznik czasu, wartość) dla zidentyfikowanych maksimów i minimów lokalnych z poprzedniego etapu
+        oraz znormalizowany sygnał oddechowy.
+
+    \item \textbf{Dane wyjściowe:} \\
+        Przefiltrowany zbiór punktów (zmodyfikowany sygnał oddechowy), o odpowiednio przesuniętych
+        wartościach znaczników czasu.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{amp_outliers.png}
+    \caption{Wykryte anomalie na podstawie amplitudy dla przykładowego sygnału.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{time_outliers.png}
+    \caption{Wykryte anomalie na podstawie Częstotliwości dla przykładowego sygnału.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{clean_outliers.png}
+    \caption{Wykryte anomalie po usunięciu artefaktów dla przykładowego sygnału.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{timestamp_outliers.png}
+    \caption{Odtworzony sygnał po usunięciu anomalii dla przykładowego sygnału.}
+\end{figure}
+
 % IV.split data into segments, MJ
+\subsection{Podział danych na segmenty i resempling}
+Ostatnim krokiem przygotowania danych przed ekstrakcją cech jest podział 
+przefiltrowanego sygnału na okna czasowe (segmenty) o stałej długości dwóch minut
+oraz wykonanie resamplingu. 
+
+Najpierw sygnał jest resamplowany do za pomocą interpolacji liniowej 
+(funkcja interp1d z biblioteki SciPy) do Częstotliwości 10 Hz, a następnie dzielony na segmenty. 
+Dzięki temu każdy segment zawiera około 1200 próbek. Sam algorytm podziału na segmenty jest raczej
+prosty - rozpoczynamy od początku sygnału i zapisujemy do odpowiednio nazwanych plików
+\texttt{.jsonl} kolejne próbki danych o długości dwóch minut.
+
 % V.feature extraction, JD
 \subsection{Ekstrakcja cech}
 Po podzieleniu danych na segmenty, a więc ostatecznym przygotowaniu ich 
