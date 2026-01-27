@@ -1,7 +1,117 @@
-\chapter{Kod źródłowy}
-W tym rozdziale wyróżniono funkcje odpowiedzialne
-za przetwarzanie danych, używając transformacji opisanych
-w rozdziale Dane. \\
+\section{Kod źródłowy}
+
+Struktura kodu źródłowego została zaprojektowana w sposób modularny, co pozwala
+na separację logiki przetwarzania sygnałów, ekstrakcji cech oraz wizualizacji rezultatów.
+Całość implementacji podzielono na trzy główne segmenty funkcjonalne.
+
+\subsection{Architektura systemu}
+Kod realizuje pełny potok przetwarzania danych (pipeline) – od surowych odczytów
+z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne moduły to:
+
+\begin{itemize}
+    \item \textbf{Przetwarzanie wejścia (Input Processing):}
+        Obsługa plików JSONL, czyszczenie danych (anomalie), wygładzanie spline-ami oraz 
+        segmentacja na 2-minutowe interwały.
+    \item \textbf{Wykrywanie cech (Feature Extraction):} 
+        Przekształcenie sygnału czasowego na wektory cech (np. BPM, głębokość oddechu, fazy oddechu).
+    \item \textbf{Wizualizacja danych:} 
+        Implementacja algorytmów redukcji wymiarowości (PCA, MDS)
+        oraz ewaluacja separowalności klas przy użyciu SVM.
+\end{itemize}
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{main}}}
+Przepływ danych opiera się na klasie \texttt{ADC\_data}, która przechowuje
+obrabiane dane na różnych etapach przetworzenia, w tym znormalizowane
+wyniki pomiarów w woltach. Poniżej przedstawiono kluczowe funkcje procesowe:
+
+\begin{enumerate}
+    \item \texttt{process\_file()} oraz \texttt{handle\_input\_data()}: 
+        Odpowiadają za parsowanie surowego formatu JSON (zawierającego dane z akcelerometrów
+        IMU i tensometrów ADC) do ustandaryzowanych obiektów procesowych.
+    \item \texttt{breath\_separation()}: 
+        Wykorzystuje analizę ekstremów lokalnych do podziału ciągłego sygnału na
+        pojedyncze cykle oddechowe.
+    \item \texttt{outlier\_detection()}: 
+        Realizuje filtrację statystyczną, usuwając $x\%$ oddechów o najbardziej 
+        odbiegających parametrach czasowo-amplitudowych, co minimalizuje wpływ błędów pomiarowych.
+    \item \texttt{split\_data\_into\_segments()}: 
+        Normalizuje długość próbek poprzez resampling i dzieli sygnał na fragmenty
+        ułatwiające dalszą analizę statystyczną.
+\end{enumerate}
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{extract\_features}}}
+Skrypt ten odpowiada za wyznaczenie wektorów cech dla segmentów oczyszczonego sygnału stanowiącego wyjście
+poprzedniego skryptu. Realizuje on to przez wybranie segmentów, których procent utraconych danych nie
+przekroczył wartości \texttt{ACCEPTABLE\_DATA\_LOSS} ustawionej bazowo na 0.2
+
+\begin{itemize}
+    \item \texttt{basic\_feature\_extraction()}: Funkcja, w której środku następuje ekstrakcja wektora cech.
+    Jest ona wywoływana pojedynczo, dla każdego segmentu analizowanego przez skrypt (mniej niż 20\% utraty danych).
+    Procedury wykonywane w ramach tej funkcji zostały opisane w sekcji \ref{subsection:extraction}.
+\end{itemize}
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{visualize\_data}}}
+Skrypt ten odpowiada za wizualizację danych po przetworzeniu i ekstrakcji cech. Kluczowe funkcje i elementy
+stanowiące część wizualizacji to:
+\begin{itemize}
+    \item \texttt{NO\_OF\_FEATURES\_AFTER\_ALG}:
+        Stała mówiąca o tym, do ilu cech należy zredukować nasze wektory.
+    \item \texttt{FeatureData}:
+        Struktura trzymająca dane zarówno przed, jak i po redukcji cech, etykiety dla danych
+        oraz kolory do wizualizacji.
+    \item \texttt{feature\_loading}: Funkcja zajmująca się wczytaniem wektorów cech z pliku \texttt{extracted\_features.jsonl}
+        do wyżej wspomnianej struktury.
+    \item \texttt{MDS\_algorithm}:
+        Funkcja wywołująca algorytm redukcji cech MDS i wyświetlająca jej wynik na ekranie wraz z etykietami danych.
+    \item \texttt{PCA\_algorithm}:
+        Funkcja wywołująca algorytm redukcji cech PCA i zapisująca wynik w strukturze.
+    \item \texttt{SVM\_validation}: Funkcja mająca na celu walidację możliwości podziału zbioru binarnie przez
+        hiperpłaszczyznę.
+    \item \texttt{plotheatmap}: Funkcja standaryzująca dane do przedziału [0,1] (dla każdej cechy osobno) i
+        wyświetlająca je za pomocą heatmapy.
+\end{itemize}
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{create\_data\_profiles}}}
+Skrypt ten odpowiada za tworzenie induwidualnych profili oddechowych każdej osobie, dla której
+zostały zebrane dane. Dzięki temu możliwe jest przedstawienie i dostrzeżenie
+indywidualnych cech oddechowych każdej osoby i wizualne potwierdzenie zasadności przeprowadzanego
+badania. Każdy taki profil jest Pythonową mapą i zawiera:
+
+\begin{itemize}
+    \item \texttt{signal}: 
+        Jest to wycinek surowego sygnału oddechowego danej osoby zawierający jeden oddech, który
+        statystycznie najlepiej reprezentuje jej sposób oddychania ze względu na szereg parametrów 
+        stanowiących kolejne pola tej mapy.
+    \item \texttt{timestamps}: 
+        Odpowiada za przechowywanie znaczników czasowych odpowiadających kolejnym punktom sygnału.
+    \item \texttt{inhale, inspiratory\_phase, exhale, expiratory\_phase}:
+        Cztery pola odpowiadające kolejnym fazom oddechu. Każde z nich zawiera różnicę w timestampach
+        pomiędzy początkiem i końcem danej fazy.
+    \item \texttt{length}:
+        Długość całego oddechu w milisekundach.
+    \item \texttt{depth}:
+        Głębokość oddechu, czyli różnica pomiędzy maksymalną a minimalną wartością sygnału
+        w danym oddechu.
+\end{itemize}
+
+Do zadań na przyszłość należy rozszerzenie tej mapy o dodatkowe pola zawierające cechy, które dokładniej pozwolą
+charakteryzować indywidualny sposób oddychania każdej osoby. Poniżej znajdują się najważniejsze funkcje
+odpowiadające za tworzenie profili oddechowych:
+
+\begin{itemize}
+    \item \texttt{create\_data\_profiles()}: 
+        Główna funkcja tworząca profile oddechowe dla każdej osoby na podstawie przetworzonych danych.
+    \item \texttt{get\_people\_list()}: 
+        Funkcja zwracająca listę osób na podstawie etykiet danych znajdujących się w folderze \texttt{results}.
+    \item \texttt{calculate\_breath\_characteristics()}: 
+        Oblicza fazy oddechu (wdech, faza inspiracji, wydech, faza ekspiracji) na podstawie sygnału dla każdego 
+        wykrytego oddechu.
+    \item \texttt{get\_mode\_breath()}:
+        Wybiera najczęściej występujący oddech na podstawie cech statystycznych.
+    \item \texttt{visualize\_profiles()}:
+        Tworzy wykresy przedstawiające profile oddechowe każdej osoby.
+\end{itemize}
+
 
 % flow w funkcjach: main -> data_processing -> kolejne poniższe
 % etapy jako sekcje rozdziału kod:
