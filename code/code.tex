@@ -41,16 +41,35 @@ wyniki pomiarów w woltach. Poniżej przedstawiono kluczowe funkcje procesowe:
 
 \subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{extract\_features}}}
 Skrypt ten odpowiada za wyznaczenie wektorów cech dla segmentów oczyszczonego sygnału stanowiącego wyjście
-poprzedniego skryptu. 
+poprzedniego skryptu. Realizuje on to przez wybranie segmentów, których procent utraconych danych nie
+przekroczył wartości \texttt{ACCEPTABLE\_DATA\_LOSS} ustawionej bazowo na 0.2
 
 \begin{itemize}
-    \item \texttt{extract\_features()}: 
-        Główna funkcja ekstrakcji cech, która dla każdego segmentu wywołuje podfunkcje obliczające\dots
-    \item \texttt{Kuba?}
+    \item \texttt{basic\_feature\_extraction()}: Funkcja, w której środku następuje ekstrakcja wektora cech.
+    Jest ona wywoływana pojedynczo, dla każdego segmentu analizowanego przez skrypt (mniej niż 20\% utraty danych).
+    Procedury wykonywane w ramach tej funkcji zostały opisane w sekcji \ref{subsection:extraction}.
 \end{itemize}
 
 \subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{visualize\_data}}}
-Skrypt ten odpowiada za wizualizację danych po przetworzeniu i ekstrakcji cech\dots
+Skrypt ten odpowiada za wizualizację danych po przetworzeniu i ekstrakcji cech. Kluczowe funkcje i elementy
+stanowiące część wizualizacji to:
+\begin{itemize}
+    \item \texttt{NO\_OF\_FEATURES\_AFTER\_ALG}:
+        Stała mówiąca o tym, do ilu cech należy zredukować nasze wektory.
+    \item \texttt{FeatureData}:
+        Struktura trzymająca dane zarówno przed, jak i po redukcji cech, etykiety dla danych
+        oraz kolory do wizualizacji.
+    \item \texttt{feature\_loading}: Funkcja zajmująca się wczytaniem wektorów cech z pliku \texttt{extracted\_features.jsonl}
+        do wyżej wspomnianej struktury.
+    \item \texttt{MDS\_algorithm}:
+        Funkcja wywołująca algorytm redukcji cech MDS i wyświetlająca jej wynik na ekranie wraz z etykietami danych.
+    \item \texttt{PCA\_algorithm}:
+        Funkcja wywołująca algorytm redukcji cech PCA i zapisująca wynik w strukturze.
+    \item \texttt{SVM\_validation}: Funkcja mająca na celu walidację możliwości podziału zbioru binarnie przez
+        hiperpłaszczyznę.
+    \item \texttt{plotheatmap}: Funkcja standaryzująca dane do przedziału [0,1] (dla każdej cechy osobno) i
+        wyświetlająca je za pomocą heatmapy.
+\end{itemize}
 
 \subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{create\_data\_profiles}}}
 Skrypt ten odpowiada za tworzenie induwidualnych profili oddechowych każdej osobie, dla której
