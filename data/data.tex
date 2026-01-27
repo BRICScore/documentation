@@ -3,24 +3,45 @@
 % opis kształtu i znaczenia danych
 % 1.dane (co mierzymy, jak to wygląda, co uzyskujemy)
 \section{Obiekt pomiaru}
-% mierzymy wartości z tensometru przetwornikami ADC kamizelką
-% wygląd danych - naciąg każdego z pasów
-% uzyskujemy - linie jsonl z wartościami kolejnych próbek
+\label{obiekt_pomiaru}
 
-% 2.transformacje danych (przejscia pomiedzy etapami) - Flow
-\section{Etapy przetwarzania danych}
-% etapy:
-% I.handle input data, MJ
-\subsection{Obsługa danych wejściowych i wstępne przetwarzanie}
-Pierwszym etapem przetwarzania danych jest ich wczytanie oraz odpowiednie
-sformatowanie. Dane, zgodnie z opisem w sekcji 1, są przechowywane w 
-plikach \texttt{.jsonl}. Każda linia reprezentuje pojedynczą próbkę zarejestrowaną
-przez kamizelkę pomiarową.
+Obiektem pomiaru jest sygnał oddechowy rejestrowany przez system kamizelki
+sensorycznej. Pomiar opiera się na analizie zmian obwodu klatki piersiowej 
+i brzucha użytkownika podczas cyklu oddechowego. 
 
-Wczytywanie odbywa się sekwencyjnie. Każda linia zawiera surowe dane czasowe
-(godziny, minuty, sekundy, milisekundy), 24-bitowe wartości z pięciu
-przetworników ADC (podzielone na trzy 8-bitowe składowe) oraz dane z czujników
-inercyjnych IMU. Poniżej przedstawiono przykładowy format surowej próbki:
+System wykorzystuje dwa główne typy sensorów:
+\begin{itemize}
+    \item \textbf{Tensometry (ADC):} 
+        Pięć pasów tensometrycznych rozmieszczonych na różnych wysokościach tułowia.
+        Rejestrują one siłę naciągu pasów, która zmienia się wraz z nabieraniem
+        i wypuszczaniem powietrza.
+    \item \textbf{Jednostki inercyjne (IMU):} 
+        Zestaw akcelerometrów i żyroskopów monitorujących orientację przestrzenną oraz
+        ruchy klatki piersiowej. Na chwilę obecną dane z tych sensorów nie są wykorzystywane.
+\end{itemize}
+
+\subsection{Charakterystyka surowych danych}
+Dane przesyłane z urządzenia mają formę strumienia obiektów JSON. Każda próbka zawiera timestamp 
+oraz surowe odczyty binarne z sensorów.
+
+Poniżej przedstawiono strukturę kluczowych pól surowej próbki:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Klucz sygnału} & \textbf{Typ} & \textbf{Opis fizyczny} \\ \hline
+\texttt{hrs, min, sec, ms} & czas & Czas rejestracji próbki od uruchomienia urządzenia. \\ \hline
+\texttt{adc1...adc5} & 24-bit & Trzy 8-bitowe rejestry (np. \texttt{23\_to\_16}) tworzące naciąg 
+pasa zapisany w formacie U2\\ \hline
+\texttt{imu1...imu5\_acc} & m/s$^2$ & Składowe przyspieszenia liniowego w osiach X, Y, Z dla 5 punktów kamizelki. \\ \hline
+\texttt{imu1...imu5\_gyr} & deg/s & Prędkość kątowa (orientacja) klatki piersiowej i pleców. \\ \hline
+\texttt{output\_status} & bool & Flaga diagnostyczna określająca poprawność pracy danego sensora. \\ \hline
+\end{tabular}
+\caption{Opis składowych danych surowych.}
+\end{table}
+
+Poniżej przedstawiono przykładowy format surowej próbki:
 
 \begin{verbatim}
     "hrs": 0, "min": 0, "sec": 13, "ms": 457,
@@ -57,6 +78,21 @@ inercyjnych IMU. Poniżej przedstawiono przykładowy format surowej próbki:
     "output_status_imu4": true, "output_status_imu5": true,
     "output_status_padding": 0
 \end{verbatim}
+
+% 2.transformacje danych (przejscia pomiedzy etapami) - Flow
+\section{Etapy przetwarzania danych}
+% etapy:
+% I.handle input data, MJ
+\subsection{Obsługa danych wejściowych i wstępne przetwarzanie}
+Pierwszym etapem przetwarzania danych jest ich wczytanie oraz odpowiednie
+sformatowanie. Dane, zgodnie z opisem w punkcie \ref{obiekt_pomiaru}, są przechowywane w 
+plikach \texttt{.jsonl}. Każda linia reprezentuje pojedynczą próbkę zarejestrowaną
+przez kamizelkę pomiarową.
+
+Wczytywanie odbywa się sekwencyjnie. Każda linia zawiera surowe dane czasowe
+(godziny, minuty, sekundy, milisekundy), 24-bitowe wartości z pięciu
+przetworników ADC (podzielone na trzy 8-bitowe składowe) oraz dane z czujników
+inercyjnych IMU.
 
 W celu ułatwienia dalszej obróbki, każda z tych linii jest parsowana do wewnętrznej
 struktury danych. Proces ten obejmuje połączenie trzech 8-bitowych rejestrów każdego
