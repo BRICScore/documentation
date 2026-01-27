@@ -1,7 +1,62 @@
-\chapter{Kod źródłowy}
-W tym rozdziale wyróżniono funkcje odpowiedzialne
-za przetwarzanie danych, używając transformacji opisanych
-w rozdziale Dane. \\
+\section{Kod źródłowy}
+
+Struktura kodu źródłowego została zaprojektowana w sposób modularny, co pozwala
+na separację logiki przetwarzania sygnałów, ekstrakcji cech oraz wizualizacji rezultatów.
+Całość implementacji podzielono na trzy główne segmenty funkcjonalne.
+
+\subsection{Architektura systemu}
+Kod realizuje pełny potok przetwarzania danych (pipeline) – od surowych odczytów
+z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne moduły to:
+
+\begin{itemize}
+    \item \textbf{Przetwarzanie wejścia (Input Processing):}
+        Obsługa plików JSONL, czyszczenie danych (anomalie), wygładzanie spline-ami oraz 
+        segmentacja na 2-minutowe interwały.
+    \item \textbf{Wykrywanie cech (Feature Extraction):} 
+        Przekształcenie sygnału czasowego na wektory cech (np. BPM, głębokość oddechu, fazy oddechu).
+    \item \textbf{Wizualizacja danych:} 
+        Implementacja algorytmów redukcji wymiarowości (PCA, MDS)
+        oraz ewaluacja separowalności klas przy użyciu SVM.
+\end{itemize}
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{main}}}
+Przepływ danych opiera się na klasie \texttt{ADC\_data}, która przechowuje
+obrabiane dane na różnych etapach przetworzenia, w tym znormalizowane
+wyniki pomiarów w woltach. Poniżej przedstawiono kluczowe funkcje procesowe:
+
+\begin{enumerate}
+    \item \texttt{process\_file()} oraz \texttt{handle\_input\_data()}: 
+        Odpowiadają za parsowanie surowego formatu JSON (zawierającego dane z akcelerometrów
+        IMU i tensometrów ADC) do ustandaryzowanych obiektów procesowych.
+    \item \texttt{breath\_separation()}: 
+        Wykorzystuje analizę ekstremów lokalnych do podziału ciągłego sygnału na
+        pojedyncze cykle oddechowe.
+    \item \texttt{outlier\_detection()}: 
+        Realizuje filtrację statystyczną, usuwając $x\%$ oddechów o najbardziej 
+        odbiegających parametrach czasowo-amplitudowych, co minimalizuje wpływ błędów pomiarowych.
+    \item \texttt{split\_data\_into\_segments()}: 
+        Normalizuje długość próbek poprzez resampling i dzieli sygnał na fragmenty
+        ułatwiające dalszą analizę statystyczną.
+\end{enumerate}
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{extract\_features}}}
+Skrypt ten odpowiada za wyznaczenie wektorów cech dla segmentów oczyszczonego sygnału stanowiącego wyjście
+poprzedniego skryptu. 
+
+\begin{itemize}
+    \item \texttt{extract\_features()}: 
+        Główna funkcja ekstrakcji cech, która dla każdego segmentu wywołuje podfunkcje obliczające\dots
+    \item \texttt{Kuba?}
+\end{itemize}
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{visualize\_data}}}
+Skrypt ten odpowiada za wizualizację danych po przetworzeniu i ekstrakcji cech\dots
+
+\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{create\_data\_profiles}}}
+Skrypt ten odpowiada za tworzenie induwidualnych profili oddechowych każdej osobie, dla której
+zostały zebrane dane. Taki profil posiada... Dzięki temu możliwe jest przedstawienie i dostrzeżenie
+indywidualnych cech oddechowych każdej osoby i wizualne potwierdzenie zasadności przeprowadzanego
+badania.
 
 % flow w funkcjach: main -> data_processing -> kolejne poniższe
 % etapy jako sekcje rozdziału kod:
