@@ -1,10 +1,10 @@
-\section{Kod źródłowy}
+\chapter{Kod źródłowy}
 
 Struktura kodu źródłowego została zaprojektowana w sposób modularny, co pozwala
 na separację logiki przetwarzania sygnałów, ekstrakcji cech oraz wizualizacji rezultatów.
 Całość implementacji podzielono na trzy główne segmenty funkcjonalne.
 
-\subsection{Architektura systemu}
+\section{Architektura systemu}
 Kod realizuje pełny potok przetwarzania danych (pipeline) – od surowych odczytów
 z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne moduły to:
 
@@ -19,7 +19,7 @@ z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne modu
         oraz ewaluacja separowalności klas przy użyciu SVM.
 \end{itemize}
 
-\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{main}}}
+\section{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{main}}}
 Przepływ danych opiera się na klasie \texttt{ADC\_data}, która przechowuje
 obrabiane dane na różnych etapach przetworzenia, w tym znormalizowane
 wyniki pomiarów w woltach. Poniżej przedstawiono kluczowe funkcje procesowe:
@@ -39,7 +39,7 @@ wyniki pomiarów w woltach. Poniżej przedstawiono kluczowe funkcje procesowe:
         ułatwiające dalszą analizę statystyczną.
 \end{enumerate}
 
-\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{extract\_features}}}
+\section{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{extract\_features}}}
 Skrypt ten odpowiada za wyznaczenie wektorów cech dla segmentów oczyszczonego sygnału stanowiącego wyjście
 poprzedniego skryptu. Realizuje on to przez wybranie segmentów, których procent utraconych danych nie
 przekroczył wartości \texttt{ACCEPTABLE\_DATA\_LOSS} ustawionej bazowo na 0.2
@@ -50,7 +50,7 @@ przekroczył wartości \texttt{ACCEPTABLE\_DATA\_LOSS} ustawionej bazowo na 0.2
     Procedury wykonywane w ramach tej funkcji zostały opisane w sekcji \ref{subsection:extraction}.
 \end{itemize}
 
-\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{visualize\_data}}}
+\section{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{visualize\_data}}}
 Skrypt ten odpowiada za wizualizację danych po przetworzeniu i ekstrakcji cech. Kluczowe funkcje i elementy
 stanowiące część wizualizacji to:
 \begin{itemize}
@@ -71,7 +71,7 @@ stanowiące część wizualizacji to:
         wyświetlająca je za pomocą heatmapy.
 \end{itemize}
 
-\subsection{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{create\_data\_profiles}}}
+\section{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{create\_data\_profiles}}}
 Skrypt ten odpowiada za tworzenie induwidualnych profili oddechowych każdej osobie, dla której
 zostały zebrane dane. Dzięki temu możliwe jest przedstawienie i dostrzeżenie
 indywidualnych cech oddechowych każdej osoby i wizualne potwierdzenie zasadności przeprowadzanego
