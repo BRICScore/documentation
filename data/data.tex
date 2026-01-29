@@ -319,4 +319,62 @@ Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MK\_sit: 84.93\%}
 \includegraphics{MJ_MK.png}
 \\
 Zmierzona dokładność: \texttt{Accuracy for MJ\_sit and MK\_sit: 91.07\%}
-\\
+
+% VII. Creating data profiles, MJ
+\section{Tworzenie profili oddechowych osób}
+
+Ostatnim etapem analizy danych jest wytworzenie unikatowego i uśrednionego profilu oddechowego 
+dla każdej osoby objętej badaniem na podstawie szeregu wyznaczonych cech. Proces ten pozwala 
+na wyznaczenie wzorca charakterystycznego oddechu dla konkretnego użytkownika, co może 
+służyć jako punkt odniesienia w dalszych badaniach nad biometryczną identyfikacją lub diagnostyką.
+Wytowrzony profil zawiera zarówno uśrednione wartości kluczowych cech czasowo-amplitudowych,
+jak i reprezentatywny sygnał oddechowy - pojedynczy oddech będący dominantą wśród analizowanych danych.
+
+\subsection{Metodyka wyznaczania profilu}
+Tworzenie profilu opiera się na następujących operacjach: 
+\begin{itemize}
+    \item Wyznaczaniu parametrów liczbowych każdego oddechu w zbiorze danych danej osoby.
+    \item Uśrednianiu oraz wyznaczaniu dominanty tych parametrów.
+    \item Selekcji najbardziej reprezentatywnego cyklu oddechowego na podstawie tych danych obarczonych
+    eksperymantalnie ustalonymi wagami.
+    \item Zapisaniu tych parametrów do dalszej analizy oraz wizualizacji.
+\end{itemize}
+
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{kuba_profil.png}
+    \captionof{figure}{Przykładowy cykl oddechowy stanowiący najbardziej reprezentatywną próbkę.}
+\end{minipage}
+
+Warto zaznaczyć, że przy tworzeniu najbardziej reprezentatywnego oddechu obecnie stosujemy dwa podejścia: 
+\begin{itemize}
+    \item \textbf{Generowanie syntetycznego sygnału:} 
+        Na podstawie wyznaczonych parametrów (amplituda, czas trwania, długości faz oddechowych) 
+        generowany jest sztuczny sygnał oddechowy przy użyciu funkcji sinusoidalnych i odpowiednich
+        przesunięć fazowych.
+    \item \textbf{Wybór rzeczywistego cyklu oddechowego:}
+        Zamiast generować sztuczny, syntetyczny sygnał, algorytm przeszukuje bazę zarejestrowanych 
+        i oczyszczonych oddechów danej osoby. Wybierany jest ten cykl, którego parametry (amplituda, czas trwania i 
+        długości poszczególnych faz oddechowych) znajdują się najbliżej wyliczonego matematycznie profilu.
+\end{itemize}
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{kuba_profile.png}
+    \captionof{figure}{Przykładowa reprezentacja graficzna profilu oddechowego w postaci wygenerowanego syntetycznego sygnału.}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{profile_grupa.png}
+    \captionof{figure}{Przykładowa reprezentacja graficzna profilu oddechowego w postaci wybranego rzeczywistego cyklu oddechowego.}
+\end{minipage}
+
+\subsection{Zastosowanie profili}
+Na chwilę obecną wygenerowany profil oddechowy pełni jedną niezwykle istotną funkcję w projekcie:
+\begin{itemize}
+    \item \textbf{Weryfikacja jakościowa:}
+        Pozwala na szybkie porównanie wizualne „typowego” oddechu różnych osób, co potwierdza zasadność użycia 
+        algorytmów takich jak MDS czy PCA do ich separacji.
+\end{itemize}
