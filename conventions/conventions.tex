@@ -3,14 +3,14 @@
 
 	\begin{itemize}
 		\item \textbf{BRV (Breathing Rhythm Vest)} - kamizelka pomiarowa wyposażona w tensometry, akcelerometry i 
-		żyroskopy, służąca do pomiaru rytmu oddechowego u człowieka. Główny instryment pomiarowy, wykonany
+		żyroskopy, służąca do pomiaru rytmu oddechowego u człowieka. Główny instrument pomiarowy, wykonany
 		w ramach pracy magisterskiej innej grupy studentów WETI
 		\item \textbf{ADC (Analog-to-Digital Converter)} - przetwornik analogowo-cyfrowy, urządzenie elektroniczne
 		służące do konwersji sygnałów analogowych na cyfrowe. Tu jest to część kamizelki BRV, która przetwarza
-		sygnały z tensometrów na dane cyrowe do dalszej analizy.
+		sygnały z tensometrów na dane cyfrowe do dalszej analizy.
 		\item \textbf{Pomiar/badanie} - całość pliku z danymi zebranymi podczas jednego badania, trwającego 
 		określoną ilość czasu (np. 10 minut).
-		\item \textbf{Próbka} - pojedynczy znacznik czasu z przypisanymi wartościami sygnalu ADC z czujników
+		\item \textbf{Próbka} - pojedynczy znacznik czasu z przypisanymi wartościami sygnału ADC z czujników
 		kamizelki BRV.
 		\item \textbf{Segment} - wyodrębniony fragment pomiaru o określonej długości czasowej (np. 2 minuty), 
 		wykorzystywany do analizy i ekstrakcji cech. Zawiera wiele próbek.
@@ -26,7 +26,7 @@
 		\item {pas 1 - pod pachami}
 		\item {pas 2 - na linii sutków}
 		\item {pas 3 - na poziomie najniższego z żeber}
-		\item {pas 4 - na poziome pępka}
+		\item {pas 4 - na poziomie pępka}
 		\item {pas 5 - na poziomie pasa}
 	\end{itemize}
 
@@ -36,7 +36,7 @@
 		\captionof{figure}{Graficzna reprezentacja sposobu noszenia kamizelki pomiarowej BRV.}
 	\end{minipage}
 
-	Obecnie wszystkie wykonane pomiary odbywały się w pozycji siedzącej i stanie spoczynku. 
+	Obecnie wszystkie wykonane pomiary odbywały się w pozycji siedzącej i w stanie spoczynku. 
 	Dopuszczalne były jedynie niewielkie ruchy ciała, takie jak poprawienie pozycji siedzącej czy zmiana ułożenia rąk.
 	Dodatkowo dopuszczaliśmy następujące czynności:
 	\begin{itemize}
@@ -47,12 +47,26 @@
 		i w sposób niewzbudzający silnych emocji (może to powodować zmiany naturalnego rytmu oddechowego).
 	\end{itemize}
 	Całe badanie zazwyczaj trwało około 15 minut, ale wykonaliśmy też kilka dłuższych pomiarów. Najdłuższy 
-	wykonany pomiar trwał 60 minut. Całkowicie udało się zebrać około 5 godzin materiału pomiarowego od 3 różych osób.
+	wykonany pomiar trwał 60 minut. Całkowicie udało się zebrać około 5 godzin materiału pomiarowego od 3 różnych osób.
 	Powiększenie tego zbioru (zarówno pod względem czasu pomiarowego, jak i liczby osób) jest priorytetem na przyszłość.
 
+	\section{Wykorzystane technologie}
+	W projekcie zostały wykorzystane następujące technologie:
+	\begin{itemize}
+		\item Język programowania Python w wersji 3.12
+		\item Język LaTeX do tworzenia dokumentacji technicznej
+		\item Biblioteka NumPy do obliczeń numerycznych
+		\item Biblioteka SciPy do analizy sygnałów
+		\item Biblioteka Matplotlib do wizualizacji danych
+		\item Biblioteka Seaborn do wizualizacji danych
+		\item Biblioteka SciKit-learn do uczenia maszynowego
+		\item Biblioteka Pathlib do operacji na ścieżkach plików
+		\item Baza danych MongoDB do przechowywania danych pomiarowych
+	\end{itemize}
+
 	\section{Struktura bazy danych}
-	W celu usprawnionego przechowywania informacji zebranych w trakcie realizacji projektu grupowego utworzono bazę danych MongoDB
-	Baza danych zawiera podstawowo 2 kolekcje: 
+	W celu usprawnionego przechowywania informacji zebranych w trakcie realizacji projektu grupowego utworzono bazę danych MongoDB.
+	Baza danych zawiera podstawowo dwie kolekcje: 
 	\begin{itemize}
 		\item{segmenty badań składające się z pomiarów - \textbf{segments}}
 		\begin{center}
