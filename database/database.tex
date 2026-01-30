@@ -1,7 +1,16 @@
 \chapter{Serwer BRICS}
 	W celu usprawnionego przechowywania informacji zebranych w trakcie realizacji projektu grupowego utworzono serwer BRICS, udostępniony dla członków zespołu. Rozdział ten ma na celu omówić zaimplementowane zabezpieczenia oraz usługi realizowane przez serwer.
+	Obecnie Serwer BRICS udostępnia trzy usługi:
+	\begin{itemize}
+		\item {\textbf{BRICS DB} - bazę danych MongoDB }
+		\item {\textbf{BRICS API} - REST API stanowiące interfejs do BRICS DB}
+		\item {\textbf{usługa konsoli zdalnej poprzez SSH}}
+	\end{itemize}
+	
+	Usługi te dostępne są w Internecie głównie z pomocą tunelu HTTP z użyciem Cloudflare, stworzonego z pomocą osoby trzeciej (znajomego członka zespołu), wykorzystując jego prywatną domenę - \verb|electimore.xyz|. W ten sposób możliwe są mechanizmy rate-limiting'u oraz kontroli dostępu.
+	
 	\section {Baza danych}
-	W celu przechoywania danych użyto bazy danych MongoDB. Kopia danych logowania jest w posiadaniu każdego z uczestników zespołu. Znajduje się ona na prywatnym komputerze uczestnika projektu pod systemem Ubuntu Linux, działając tam jako demon systemowy.
+	W celu przechoywania danych użyto bazy danych MongoDB. Znajduje się ona na prywatnym komputerze uczestnika projektu pod systemem Ubuntu Linux, działając tam jako demon systemowy.
 	Baza danych zawiera obecnie jedną kolekcję (poza domyślnymi utworzonymi przez MongoDB): 
 	\begin{itemize}
 		\item{\textbf{measurements} - pomiary w postaci ścieżki w systemie plików oraz dotyczące ich metadane}
@@ -37,11 +46,32 @@
 			\item{\textbf{POST/measurement/upload} - służący do umieszczania wykonanych pomiarów}
 		\end{itemize}
 		
-		Dostęp do nich jest realizowany w ramach programu poprzez skrypty dostępu,  stanowiące początkową realizację warstwy użytkownika, pozwalające na wybranie pliku oraz dodanie odpowiednich metadanych, bądź podanie parametrów wyszukiwania.
-		
-	
+		Dostęp do nich jest realizowany w ramach programu poprzez skrypty dostępu (w trakcie tworzenia w momencie wypełniania tego fragmentu dokumentacji),  stanowiące początkową realizację warstwy użytkownika, pozwalające na wybranie pliku oraz dodanie odpowiednich metadanych, bądź podanie parametrów wyszukiwania.
+
 	\section{Zabezpieczenia}
-	Sekcja ta ma na celu wyszczegółowienie rozwiązań zastosowanych w celu realizacji bezpiecznego dostępu członków projektu do serwera BRICS oraz usług przez niego realizowanych.  Ich implementację można przedstawić w postaci poniższych diagramów.
+	Sekcja ta ma na celu wyszczegółowienie rozwiązań zastosowanych w celu realizacji bezpiecznego dostępu członków projektu do serwera BRICS oraz usług przez niego realizowanych.  Ich implementację można przedstawić w postaci poniższego diagramu.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.7\textwidth]{network_flowchart.png}
+		\caption{Uproszczony diagram transmisji danych wewnątrz projektu}
+	\end{figure}
+	
+	\subsection{Konsola zdalna}
+	Jak zaznaczono powyżej,  Serwer BRICS udostępnia członkom zespołu usługę konsoli zdalnej poprzez SSH. Dla każdego z nich utworzono parę kluczy, i jedynym możliwym sposobem dostępu do konsoli jest uwierzytelnienie poprzez takową parę kluczy, efektywnie tworząc whitelistę, zawierajacą jedynie określonych członków zespołu. Usługa SSH dostępna jest jedynie z sieci lokalnej serwera, tym samym ustanawiając tunel Cloudflare jako jedyne zdalne medium połączenia.
+	
+	Przykładowy sposób ustanowienia konsoli zdalnej na serwerze BRICS z maszyny członka zespołu, dla użytkownika brics (główny użytkownik): 
+	\begin{verbatim}
+		sudo cloudflared access ssh --hostname brics-ssh.electimore.xyz --url localhost:22
+		ssh brics@localhost -p 22
+	\end{verbatim}
+	
+	\subsection{API}
+	Dostęp do API możliwy jest jedynie poprzez okazanie odpowiedniej wartości (Service Token) w nagłówkach żądań HTTP. Wartość ta jest zmienną środowiskową, przekazaną każdemu z członków zespołu. Żądania jej niezawierające zostaną odrzucone już na poziomie Cloudflare'a. W celach początkowej realizacji warstwy użytkownika głównym medium użycia API są skrypty dostępu, pozwalające na spreparowanie odpowiednich kwerend i załączenie plików koniecznych dla endpoint'ów.
+	
+	\subsection{Baza danych}
+	Niemożliwym jest zdalny dostęp do bazy danych. Należy wpierw połączyć się konsolą zdalną poprzez SSH i z jej poziomu wprowadzać ewentualne zmiany w konfiguracji.
+	
 	
 			
 		
