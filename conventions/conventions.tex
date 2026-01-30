@@ -54,7 +54,7 @@
 	W projekcie zostały wykorzystane następujące technologie:
 	\begin{itemize}
 		\item Język programowania Python w wersji 3.12
-		\item Język LaTeX do tworzenia dokumentacji technicznej
+		\item Oprogramowanie LaTeX do tworzenia dokumentacji technicznej
 		\item Biblioteka NumPy do obliczeń numerycznych
 		\item Biblioteka SciPy do analizy sygnałów
 		\item Biblioteka Matplotlib do wizualizacji danych
@@ -62,30 +62,9 @@
 		\item Biblioteka SciKit-learn do uczenia maszynowego
 		\item Biblioteka Pathlib do operacji na ścieżkach plików
 		\item Baza danych MongoDB do przechowywania danych pomiarowych
-	\end{itemize}
-
-	\section{Struktura bazy danych}
-	W celu usprawnionego przechowywania informacji zebranych w trakcie realizacji projektu grupowego utworzono bazę danych MongoDB.
-	Baza danych zawiera podstawowo dwie kolekcje: 
-	\begin{itemize}
-		\item{segmenty badań składające się z pomiarów - \textbf{segments}}
-		\begin{center}
-			\begin{tabular}{|l|l|l|}
-			\hline
-			Pole & Typ & Opis \\
-			\hline
-			sourceMeasurementDate & timestamp & data wykonania pomiaru źródłowego \\
-			\hline
-			measurementLength & int & długość pomiaru w minutach \\
-			\hline
-			subject & string & PESEL osoby badanej \\ 
-			\hline
-			sampleArray  & Sample[] & tablica próbek stanowiących \\ & & jeden segment pomiaru \\
-			\hline
-		\end{tabular}
-		\end{center}
-		\item{wyekstrakcjonowane cechy z tych segmentów - \textbf{features}}
-		% TODO
+		\item Framework FastAPI do stworzenia REST API dla bazy danych
+		\item Serwer WWW Uvicorn
+		\item Zbiór narzędzi do wytwarzania i uruchamiania aplikacji skonteneryzowanych Docker
 	\end{itemize}
 
 	\section{Przepływ sterowania w programie}
