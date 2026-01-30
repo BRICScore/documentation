@@ -1,0 +1,47 @@
+\chapter{Serwer BRICS}
+	W celu usprawnionego przechowywania informacji zebranych w trakcie realizacji projektu grupowego utworzono serwer BRICS, udostępniony dla członków zespołu. Rozdział ten ma na celu omówić zaimplementowane zabezpieczenia oraz usługi realizowane przez serwer.
+	\section {Baza danych}
+	W celu przechoywania danych użyto bazy danych MongoDB. Kopia danych logowania jest w posiadaniu każdego z uczestników zespołu. Znajduje się ona na prywatnym komputerze uczestnika projektu pod systemem Ubuntu Linux, działając tam jako demon systemowy.
+	Baza danych zawiera obecnie jedną kolekcję (poza domyślnymi utworzonymi przez MongoDB): 
+	\begin{itemize}
+		\item{\textbf{measurements} - pomiary w postaci ścieżki w systemie plików oraz dotyczące ich metadane}
+	\end{itemize}
+	\begin{center}
+		\begin{tabular}{|l|l|l|}
+			\hline
+			Pole & Typ & Opis \\
+			\hline
+			measurement\_id & string & identyfikator pomiaru \\
+			\hline
+			person\_id & string & identyfikator osoby badanej pozwalający na jej identyfikację \\
+			\hline
+			timestamp & float & UNIX timestamp odpowiadający dacie rozpoczęcia pomiaru \\ 
+			\hline
+			duration\_ms  & int & długość pomiaru w milisekundach \\
+			\hline
+			measurement\_file\_path & string & ścieżka do pliku pomiarowego na serwerze \\
+			\hline
+			labels & string[]  & JSON zawierający wszystkie etykiety dotyczące pomiaru \\
+			\hline
+		\end{tabular}
+	\end{center}
+	% możliwe inne kolekcje w przyszlosci
+	
+	\section{API}
+		W celu komunikacji z wyżej wymienioną bazą danych zostało stworzone REST API, mające na celu ograniczenie dostępu oraz utworzenie warstwy abstrakcji do obsługi przesyłu oraz pobierania pomiarów i innych danych z bazy danych. Zostało ono zrealizowane z pomocą framework'a FastAPI oraz oraz implementacji serwera WWW w technologii Uvicorn. Wszystko to uruchamiane jest z odpowiednio skonfiguowanego kontenera używając Docker'a. 
+		\\ \\
+		By skorzystać z API udostępnione zostały endpoint'y:
+		
+		\begin{itemize}
+			\item{\textbf{GET /measurement/download} - służący do pobierania pomiarów odpowiadających parametrom wyszukiwania}
+			\item{\textbf{POST/measurement/upload} - służący do umieszczania wykonanych pomiarów}
+		\end{itemize}
+		
+		Dostęp do nich jest realizowany w ramach programu poprzez skrypty dostępu,  stanowiące początkową realizację warstwy użytkownika, pozwalające na wybranie pliku oraz dodanie odpowiednich metadanych, bądź podanie parametrów wyszukiwania.
+		
+	
+	\section{Zabezpieczenia}
+	Sekcja ta ma na celu wyszczegółowienie rozwiązań zastosowanych w celu realizacji bezpiecznego dostępu członków projektu do serwera BRICS oraz usług przez niego realizowanych.  Ich implementację można przedstawić w postaci poniższych diagramów.
+	
+			
+		
