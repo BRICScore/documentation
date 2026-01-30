@@ -4,6 +4,11 @@ Struktura kodu źródłowego została zaprojektowana w sposób modularny, co poz
 na separację logiki przetwarzania sygnałów, ekstrakcji cech oraz wizualizacji rezultatów.
 Całość implementacji podzielono na trzy główne segmenty funkcjonalne.
 
+\section{Przepływ sterowania w projekcie}
+	Poniżej umieszczona jest wizualizacja przepływu danych przy wywoływaniu
+	poszczególnych skryptów:	
+	\includegraphics[width=\linewidth]{flowchart.png}
+
 \section{Architektura systemu}
 Kod realizuje pełny potok przetwarzania danych (pipeline) – od surowych odczytów
 z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne moduły to:
