@@ -35,7 +35,17 @@
             \item{\textbf{bluez-peripheral} - bliblioteka służąca do tworzenia serwerów BLE wykorzystujących bibliotekę Bluez, oraz GATT API}
             \item{\textbf{dbus} - biblioteka służąca do komunikacji z wykorzystaniem głównej szyny danych}
         \end{itemize}
-        Utworzony serwer składa się z dwóch 
+        Utworzony serwer składa się z dwóch klas, jedna z nich stanowi deklaracje serwisu udostępnianego przez serwer Bluetooth, a druga obsługę wątka uruchamiającego serwer Bluetooth.
+        \\ \\
+        Serwer działa w 2 następujących po sobie fazach:
+        \begin{enumerate}
+            \item{\textbf{Uruchamianie} - podczas tej fazy serwer musi zadeklarować swoje serwisy, charakterystyki, adapter, agent i rozgłaszanie. Dane o serwisie i charakterystyce dostępnej na płytce definiowane są w klasie \textbf{BRVDataService}, a sposób rozgłaszania, agent oraz adapter definiowane są podczas 
+            inicjalizacji serwera w klasie \textbf{BRVBluetoothServer}. Ponadto, podczas inicjalizacji wątek dostaje od systemu szynę danych d-bus, na której wykonywana będzie konieczna komunikacja ze sterownikami Bluetooth i kolejno inicjalizowane są kolejne elementy serwera.}
+            \item{\textbf{Działanie} - podczas tej fazy kolejno zdejmowane są kolejne pakiety z kolejki FIFO, oraz rozdzielane na mniejsze aby umożliwić ich transport przy pomocy Bluetooth. Aby wysłać pakiet na dostępnej charakterystyce serwisu uruchamiana jest metoda \textbf{update_BRV_value}, która powoduje wygenerowanie
+            powiadomienia. Wszystkie urządzenia, które są podłączone pod system powiadomień tej charakterystyki otrzymują informacje o jej zmianie i mogą odczytać wartość}
+    \subsection{Działanie serwera Bluetooth LE}
+    Serwer Bluetooth LE (Low Energy) składa się z kilku znaczących komponentów. Głównym z nich jest serwis.
+    % TODO
     \section {Sygnalizowanie stanu płytki GPIO}
         % TODO
     \section {Przykładowy scenariusz użycia}
