@@ -289,7 +289,7 @@ Ostateczna postać wektora cech:\\
 \end{verbatim}
 
 % VI. Visualization (separate) JD
-\section{Wizualizacja danych \textcolor{red}{TODO}}
+\section{Wizualizacja danych}
 Aby zweryfikować poprawność całego procesu przetwarzania 
 należało w odpowiedni sposób zwizualizować dane pozyskane w ramach 
 projektu. Jest to niezbędny etap, gdyż pozwala na ewaluację  
@@ -316,16 +316,21 @@ postępów.
     elementy sygnału. Dzięki temu jesteśmy w stanie zredukować ostateczną ich liczbę, co
     pozytywnie wpływa na ryzyko zbytniego dopasowania oraz pozwala na mniejszy nakład 
     obliczeniowy związany np. ze skorelowanymi zmiennymi.
+    \\\\ Warto dodać, że przedstawione tutaj cechy, oznaczone jako \textbf{"Feature1"} i \textbf{"Feature2"}
+    są kombinacjami liniowymi wszystkich poprzednich cech zgodnie z działaniem obu algorytmów
+    redukcji wymiarowości. Nie są one więc możliwe do bardziej szczegółowego opisania. Dodatkowo, nie
+    wszystkie wektory cech zostały na wykresach przedstawione, gdyż dane zostały obcięte
+    powyżej progu trzech odchyleń standardowych, aby zmaksymalizować czytelność.
 
     \begin{minipage}{\linewidth}
         \centering
-        \includegraphics[width=0.7\textwidth]{MDS.png}
+        \includegraphics[width=0.7\textwidth]{MDS.jpg}
         \captionof{figure}{Cechy po wywołaniu algorytmu MDS przedstawione na dwuwymiarowym wykresie.}
     \end{minipage}
 
     \begin{minipage}{\linewidth}
         \centering
-        \includegraphics[width=0.7\textwidth]{PCA.png}
+        \includegraphics[width=0.7\textwidth]{PCA.jpg}
         \captionof{figure}{Cechy po wywołaniu algorytmu PCA przedstawione na dwuwymiarowym wykresie.}
     \end{minipage}
     
@@ -345,19 +350,19 @@ Za pomocą klasyfikatora SVM, jesteśmy w stanie podzielić zbiór na dwa, poprz
 odpowiedniej hiperpłaszczyzny maksymalizującej margines między dwoma klasami. W związku z tym, że
 jest on klasyfikatorem binarnym, należało wywołać go osobno dla każdej możliwej pary etykiet w
 ogólnym zbiorze zredukowanych cech. W ten sposób uzyskujemy podział dla wszystkich kombinacji
-oraz związaną z nimi dokładność. Poniżej przykłady dla zbioru danych 3 osób.
+oraz związaną z nimi dokładność. Poniżej przykłady dla podzbioru 3 osób.
 \\
-\includegraphics{JD_MJ.png}
+\includegraphics[width=\textwidth,keepaspectratio]{svm629v636.png}
 \\
-Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MJ\_sit: 95.56\%}
+Zmierzona dokładność: \texttt{Accuracy for s197629 and s197636: 100.00\%}
 \\
-\includegraphics{JD_MK.png}
+\includegraphics[width=\textwidth,keepaspectratio]{svm629v291.png}
 \\
-Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MK\_sit: 84.93\%}
+Zmierzona dokładność: \texttt{Accuracy for s197629 and s198291: 96.55\%}
 \\
-\includegraphics{MJ_MK.png}
+\includegraphics[width=\textwidth,keepaspectratio]{svm636v291.png}
 \\
-Zmierzona dokładność: \texttt{Accuracy for MJ\_sit and MK\_sit: 91.07\%}
+Zmierzona dokładność: \texttt{Accuracy for s197636 and s198291: 100.00\%}
 
 % VII. Creating data profiles, MJ
 \section{Tworzenie profili oddechowych osób}
