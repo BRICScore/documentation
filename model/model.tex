@@ -2,3 +2,40 @@
 \label{bricsmodel}
 
 \section{Organizacja repozytorium}
+Nasze repozytorium modelu podzieliliśmy na 4 różne składowe zgodnie z
+poniższym diagramem pakietów UML:\\
+\includegraphics[keepaspectratio,width=\linewidth]{model_structure.png}
+
+\begin{itemize}
+    \item {
+        \textbf{Classifiers} - sekcja poświęcona jest klasyfikatorom i ich danym,
+        które funkcjonują jako dodatkowe rozszerzenia naszej aplikacji. Są to głównie
+        skrypty pozwalające na dodatkową wizualizację i przegląd naszych danych poprzez
+        wykonywanie klasyfikacji na różnych stopniach przetwarzania i jakości danych.
+        }
+    \item {
+        \textbf{Data} - jest to głównie przestrzeń przechowywania danych do nauki
+        naszego głównego klasyfikatora oraz dla klasyfikacji wykorzystywanej w aplikacji,
+        działającej na świeżych plikach z kamizelki.
+        }
+    \item {
+        \textbf{Model} - obszar, w którym przechowujemy większość klas i skryptów
+        potrzebnych do wytrenowania i wdrożenia oraz integracji naszego modelu z aplikacją.
+        Przechowywane są tutaj takie pliki jak: wagi modelu, parametry uczenia modelu,
+        skrypty treningowe, czy definicje klas, będących kontenerami na dane.
+        }
+    \item {
+        \textbf{App} - główne miejsce zarządzania pozostałymi elementami repozytorium,
+        w którym integrujemy mechanizmy klasyfikacji, model oraz zarządzanie nim. Jest to
+        zarówno interfejs do posługiwania się repozytorium, jak i nasz końcow produkt, który
+        mamy na celu rozwijać w projekcie.
+        }
+\end{itemize}
+
+\section{Klasyfikatory} %MJ
+
+\section{Dane} %MJ
+
+\section{Model} %JD
+
+\section{Aplikacja} %JD
