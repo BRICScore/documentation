@@ -1,46 +1,52 @@
 \chapter{Serwer BRICS}
 	W celu usprawnionego przechowywania informacji zebranych w trakcie realizacji projektu grupowego utworzono serwer BRICS, udostępniony dla członków zespołu. Rozdział ten ma na celu omówić zaimplementowane zabezpieczenia oraz usługi realizowane przez serwer.
-	Obecnie Serwer BRICS udostępnia trzy usługi:
+	Obecnie Serwer BRICS jest realizowany w postaci maszyny używającej narzędzia Docker w celu uruchomienia 5 rodzajów kontenerów: 
 	\begin{itemize}
-		\item {\textbf{BRICS DB} - bazę danych MongoDB }
+		\item {\textbf{BRICS DB} - bazę danych MongoDB}
 		\item {\textbf{BRICS API} - REST API stanowiące interfejs do BRICS DB}
-		\item {\textbf{usługa konsoli zdalnej poprzez SSH}}
+		\item {\textbf{Redis} - baza danych stanowiąca pośrednika dla kolejki zadań}
+		\item{\textbf{Celery Worker} - kontener z procesem realizującym zadania z kolejki}
+		\item{\textbf{Celery Beat} - kontener odpowiadający za regularne dodawanie zadań do kolejki}
 	\end{itemize}
 	
-	Usługi te dostępne są udostępnione w Internecie z pomocą tunelu HTTPS z użyciem technologii Cloudflare Tunnel oraz użycia prywatnej domeny. Wdrożone zostały na prywatnym serwerze z systemem Ubuntu Linux Server połączonym z systemami Cloudflare.
+	Kolejne sekcje będą miały na celu szczegółowe omówienie realizacji poszczególnych usług powyżej.
 	
-	\section{Struktura serwera BRICS}
-	%TODO - add workers to the structure, add processing to the structure
-	
-	\section {Baza danych}
+	\section {BRICS DB}
 	W celu przechoywania danych użyto systemu MongoDB. Jest to nierelacyjna baza danych, przechowująca informację w postaci kolekcji zawierających dokumenty.
 	
 	Baza danych zawiera obecnie jedną kolekcję (poza domyślnymi utworzonymi przez MongoDB): 
 	\begin{itemize}
+	\label{metadata}
 		\item{\textbf{measurements} - dokumenty zawierające informacje na temat pomiarów przechowywanych w systemie plików serwera}
 		
-			\begin{tabular}{|l|l|l|}
-				\hline
-				Pole & Typ & Opis \\
-				\hline
-				measurement\_id & str & identyfikator pomiaru \\
-				\hline
-				timestamp & float & timestamp odpowiadający dacie rozpoczęcia pomiaru \\ 
-				\hline
-				duration\_ms  & int & długość pomiaru w milisekundach \\
-				\hline
-				filepath\_raw & str & ścieżka do pliku zawierającego surowe dane pomiarowe \\
-				\hline
-				filepath\_clean & str & ścieżka do pliku zawierającego oczyszczone dane \\
-				\hline
-				filepath\_features & str & ścieżka do pliku zawierającego cechy \\
-				\hline
-				labels & LabelsData & Obiekt przechowujący dane dot. etykiet i osoby badanej \\
-				\hline
-			\end{tabular}
-			
-			Struktura obiektu \textbf{LabelsData}:
-			\begin{center}
+	\end{itemize}
+	\begin{center}
+		Struktura obiektu \textbf{MeasurementMetadata}
+		
+		\begin{tabular}{|l|l|l|}
+			\hline
+			Pole & Typ & Opis \\
+			\hline
+			measurement\_id & str & identyfikator pomiaru \\
+			\hline
+			timestamp & float & timestamp odpowiadający dacie rozpoczęcia pomiaru \\ 
+			\hline
+			duration\_ms  & int & długość pomiaru w milisekundach \\
+			\hline
+			filepath\_raw & str & ścieżka do pliku zawierającego surowe dane pomiarowe \\
+			\hline
+			filepath\_clean & str & ścieżka do pliku zawierającego oczyszczone dane \\
+			\hline
+			filepath\_features & str & ścieżka do pliku zawierającego cechy \\
+			\hline
+			labels & LabelsData & Obiekt przechowujący dane dot. etykiet i osoby badanej \\
+			\hline
+		\end{tabular}
+	\end{center}
+		
+		\begin{center}
+				Struktura obiektu \textbf{LabelsData}
+				
 			\begin{tabular}{|l|l|l|}
 				\hline
 				activity & str & typ aktywności spośród wybranych \\
@@ -48,10 +54,13 @@
 				person\_data & BioData & Obiekt przechowujący dane dot. osoby badanej \\
 				\hline 
 			\end{tabular}
-			\end{center}
+		\end{center}
 			
-			Struktura obiektu \textbf{BioData}:
+			
+			
 			\begin{center}
+				Struktura obiektu \textbf{BioData}
+				
 				\begin{tabular}{|l|l|l|}
 					\hline
 					person\_id & str & identyfikator osoby badanej \\
@@ -70,8 +79,15 @@
 					\hline 
 				\end{tabular}
 			\end{center}
+			
+			\begin{figure}[H]
+				\centering
+				\includegraphics[width=0.7\textwidth]{db_record.png}
+				\caption{Przykładowy rekord metadanych pomiaru}
+			\end{figure}
+	\begin{itemize}
 		\item{\textbf{models}  - wersje modelu używane w systemie BRICS}
-		% TODO - MODEL
+		%TODO - MODEL
 	\end{itemize}
 	
 	\section{API}
@@ -87,10 +103,79 @@
 		%TODO - MODEL ENDPOINTY
 	\end{itemize}
 	
-	Dostęp do nich jest realizowany w ramach programu poprzez aplikację stanowiącą warstwę interakcji z kamizelką oraz skrypty dostępu, stanowiące początkową realizację warstwy użytkownika, pozwalające na wybranie pliku oraz dodanie odpowiednich metadanych, bądź podanie parametrów wyszukiwania.
+	Dostęp do nich jest realizowany w ramach programu poprzez aplikację stanowiącą warstwę interakcji z kamizelką oraz skrypty dostępu, stanowiące realizację warstwy użytkownika tworzącego zbiór danych, pozwalające na wybranie pliku oraz dodanie odpowiednich metadanych, bądź podanie parametrów wyszukiwania.
 	
 	\subsection{Szczegółowa realizacja punktów końcowych}
+	Sekcja ta ma na celu dać wgląd w działanie każdego z punktów końcowych. 
+	\subsubsection{GET /measurements/download}
+	W żądaniu HTTP do tego punktu końcowego przekazywany jest ciąg znaków będący kwerendą zawierającą filtry wyszukiwania pomiaru. Przetwarzanie tego zapytania można sprowadzić do następujących faz:
+	\begin{enumerate}
+		\item {Utworzenie poprawnej kwerendy do MongoDB na podstawie parametrów żądania}
+		\item {Wyszukiwanie metadanych na podstawie kwerendy}
+		\item {Wydobycie plików pomiarowych i stworzenie archiwum zip zawierającego pomiary odpowiadające parametrom wyszukiwania}
+		\item {Wysłanie odpowiedzi na żądanie}
+		\item {Usunięcie folderów tymczasowych utworzonych w ramach przetwarzania żądania}
+	\end{enumerate}
 	
+	\subsubsection{PUT /measurements/upload}
+	W żądaniu HTTP do tego punktu końcowego są przekazywane archiwum zip zawierające trzy pliki będące trzema wersjami oryginalnego pliku pomiarowego oraz ciąg znaków w formacie JSON zawierające \hyperref[metadata]{metadane} tego pomiaru. Przetwarzanie tego zapytania składa się z następujących faz:
+	
+	\begin{enumerate}
+		\item {Weryfikacja poprawności formatu metadanych}
+		\item {Wyznaczenie, czy następuje aktualizacja pomiaru czy utworzenie nowego -  poprzez wyszukiwanie dostarczonego identyfikatora pomiaru w bazie danych}
+		\item {Stworzenie struktur potrzebnych do przekazania procesu finalizacji zapisu pomiaru do kolejki zadań}
+		\item {Utworzenie zadania finalizacji zapisu pomiaru do bazy danych oraz systemu plików}
+		\item {Odesłanie odpowiedzi o przyjęciu lub odrzuceniu pliku do przetwarzania}
+	\end{enumerate}
+	
+	Zadanie finalizacji zapisu zostało omówione w \hyperref[tasks]{sekcji zadań}.
+	
+	\subsubsection{DELETE /measurements/delete}
+	W żądaniu HTTP do tego punktu końcowego przekazywany jest jedynie identyfikator pomiaru do usunięcia z bazy danych. Przetwarzanie składa się z następujących faz:
+	\begin{enumerate}
+		\item {Wyszukiwanie metadanych zawierających podany identyfikator}
+		\item {Usunięcie metadanych oraz plików pomiarowych w przypadku znalezienia dokumentu}
+	\end{enumerate}
+	
+	\subsection{Redis}
+	W celu zaimplementowania kolejki zadań użyto bazy danych Redis, znajdującej się całkowicie w pamięci RAM komputera. Ze względu na istnienie do 16 oddzielnych baz danych w ramach jednej instancji Redis (ponumerowanych od 0 do 15), jako kolejki zadań użyto bazy danych nr 0, a jako rejestru stanów wykonywanych oraz wykonanych zadań użyto bazy danych nr 1.
+	
+	Należy zaznaczyć, że wybór ten jest czysto arbitralny. Zdecydowano się na przechowywanie stanu zadań wykonanych ze względu na rozszerzalność projektu w przyszłości (np. poprzez usługę typu dashboard, w której to zespół tworzący zbiór danych mógłby łatwo sprawdzać stan systemu).
+	
+	\subsection{Celery Worker}
+	\label{tasks}
+	
+	Technologia Celery pozwala w ramach projektu na utworzenie kontenerów realizujących kolejkę zadań z bazy danych Redis. Pracownik taki przyjmuje zadanie z kolejki, po czym je wykonuje, a jego rezultat zwraca z powrotem do bazy danych. Dzięki zastosowaniu tej technologii wyznaczono następujące zadania:
+	
+	\begin{itemize}
+		\item {Finalizacja procesu przesłania lub aktualizacji pomiaru/modelu}
+		\item {Codzienny automatyczny zrzut bazy danych oraz plików pomiarów do kopii zapasowej}
+	\end{itemize}
+	
+	\subsubsection{Finalizacja procesu przesłania lub aktualizacji pomiaru/modelu}
+	Proces ten można rozbić na następujące podzadania:
+	
+	\begin{enumerate}
+		\item {Weryfikacja przekazanych metadanych oraz plików pomiarowych}
+		\item {Ekstrakcja i konwersja formatu plików pomiarowych/modelu}
+		\item {Atomiczna insercja/aktualizacja plików pomiarowych/modelu w systemie plików}
+		\item {Atomiczna insercja/aktualizacja rekordu metadanych w bazie danych}
+		
+	Dzięki realizacji części tego procesu w postaci zadania w kolejce czas wysyłania pomiaru jest znacznie skrócony, co jest głównym sposobem interakcji z Serwerem BRICS.
+	\end{enumerate}
+	
+	\subsubsection{Codzienny automatyczny zrzut bazy danych oraz plików pomiarów do kopii zapasowej}
+	Proces ten można rozbić na następujące podzadania:
+	
+	\begin{enumerate}
+		\item {Utworzenie kopii zapasowej bazy danych MongoDB}
+		\item {Utworzenie kopii zapasowej plików pomiarowych oraz modeli}
+		
+		Dzięki realizacji części tego procesu w postaci zadania w kolejce czas wysyłania pomiaru jest znacznie skrócony, co jest głównym sposobem interakcji z Serwerem BRICS.
+	\end{enumerate}
+	
+	\subsection{Celery Beat}
+	W ramach technologii Celery istnieje również rozwiązanie Celery Beat, pozwalające na regularne dodawanie zadań do kolejki wedle określonych zasad. W ten sposób zrealizowane jest codzienne wykonywanie kopii zapasowych plików na serwerze.
 	
 	\section{Zabezpieczenia}
 	Sekcja ta ma na celu wyszczegółowienie rozwiązań zastosowanych w celu realizacji bezpiecznego dostępu członków projektu do serwera BRICS oraz usług przez niego realizowanych.  Ich implementację można przedstawić w postaci poniższego diagramu.
@@ -98,11 +183,11 @@
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.7\textwidth]{network_flowchart.png}
-		\caption{Uproszczony diagram transmisji danych wewnątrz projektu}
+		\caption{Uproszczony diagram transmisji danych wewnątrz projektu (pomijając kamizelkę BRV)}
 	\end{figure}
 	
 	\subsection{Konsola zdalna}
-	Jak zaznaczono powyżej, Serwer BRICS udostępnia członkom zespołu usługę konsoli zdalnej poprzez SSH. Dla każdego z nich utworzono parę kluczy, i jedynym możliwym sposobem dostępu do konsoli jest uwierzytelnienie poprzez takową parę kluczy, efektywnie tworząc whitelistę, zawierajacą jedynie określonych członków zespołu. Usługa SSH dostępna jest jedynie z sieci lokalnej serwera, tym samym ustanawiając tunel Cloudflare jako jedyne zdalne medium połączenia.
+	Serwer BRICS udostępnia członkom zespołu usługę konsoli zdalnej poprzez SSH. Dla każdego z nich utworzono parę kluczy, i jedynym możliwym sposobem dostępu do konsoli jest uwierzytelnienie poprzez takową parę kluczy, efektywnie tworząc whitelistę, zawierajacą jedynie określonych członków zespołu. Usługa SSH dostępna jest jedynie z sieci lokalnej serwera, tym samym ustanawiając tunel Cloudflare jako jedyne zdalne medium połączenia.
 	
 	Przykładowy sposób ustanowienia konsoli zdalnej na serwerze BRICS z maszyny członka zespołu, dla użytkownika brics (główny użytkownik): 
 	\begin{verbatim}
@@ -111,10 +196,10 @@
 	\end{verbatim}
 	
 	\subsection{API}
-	Dostęp do API możliwy jest jedynie poprzez okazanie odpowiedniej wartości (Service Token) w nagłówkach żądań HTTP. Wartość ta jest zmienną środowiskową, przekazaną każdemu z członków zespołu. Żądania jej niezawierające zostaną odrzucone już na poziomie Cloudflare'a. W celach początkowej realizacji warstwy użytkownika głównym medium użycia API są skrypty dostępu, pozwalające na spreparowanie odpowiednich kwerend i załączenie plików koniecznych dla endpoint'ów.
+	Dostęp do API możliwy jest jedynie poprzez okazanie odpowiedniej wartości (Service Token) w nagłówkach żądań HTTP. Wartość ta jest zmienną środowiskową, przekazaną każdemu z członków zespołu. Żądania jej niezawierające zostaną odrzucone już na poziomie Cloudflare'a. 
 	
-	\subsection{Baza danych}
-	Niemożliwym jest zdalny bezpośredni dostęp do bazy danych. Należy wpierw połączyć się konsolą zdalną poprzez SSH i z jej poziomu wprowadzać ewentualne zmiany w konfiguracji.
+	\subsection{Docker}
+	Do reszty usług bezpośredni dostęp jest niemożliwy ze względu na ustawienia zapory sieciowej serwera. Należy się wpierw połączyć poprzez konsolę zdalną, by móc działać bezpośrednio z resztą skonteneryzowanych usług.
 	
 	
 			
