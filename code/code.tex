@@ -22,6 +22,8 @@ z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne modu
     \item \textbf{Wizualizacja danych:} 
         Implementacja algorytmów redukcji wymiarowości (PCA, MDS)
         oraz ewaluacja separowalności klas przy użyciu SVM.
+     \item \textbf{Utworzenie połączenia oraz obsługa zapytań do API:} Warstwa interakcji z BRICS API w celu przesyłu oraz odbioru wyników przetwarzania pomiaru
+     \item \textbf{Interakcja z archiwami pomiarów:} Warstwa do wydobycia pobranych pomiarów w celu ich dalszego przetwarzania
 \end{itemize}
 
 \section{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{main}}}
@@ -116,6 +118,23 @@ odpowiadające za tworzenie profili oddechowych:
     \item \texttt{visualize\_profiles()}:
         Tworzy wykresy przedstawiające profile oddechowe każdej osoby.
 \end{itemize}
+
+\section{Utworzenie połączenia oraz obsługa zapytań do API - DatabaseHandler}
+DatabaseHandler to klasa odpowiadająca za utworzenie środowiska oraz obsługę przygotowanych scenariuszy zapytań do BRICS API. Udostępnia one nastepujące metody:
+\begin{itemize}
+	\item \verb|upload_measurement()|: Wykonuje wysłanie pomiaru oraz jego metadanych do API, co w rezultacie powoduje jego zapis w bazie danych.
+	\item \verb|download_measurement()|: Daje możliwość pobrania pomiarów odpowiadających parametrom wyszukiwania.
+	\item \verb|download_measurement()|: Odpowiada za przesłanie żądania usunięcia pomiaru o danym identyfikatorze.
+\end{itemize}
+
+\section{Interakcja z archiwami pomiarów}
+MeasurementDatasetHook to klasa odpowiadająca za automatyczne wydobycie oraz udostępnienie pomiarów znajdujących się w pobranych archiwum ZIP. Dzięki implementacji wewnętrznego iteratora, możliwe jest następujące użycie klasy:
+\begin{verbatim}
+	mdh = MeasurementDatasetHook(target: raw)
+	
+	for file in mdh:
+		# procesowanie pliku z surowymi danymi
+\end{verbatim}
 
 
 % flow w funkcjach: main -> data_processing -> kolejne poniższe
