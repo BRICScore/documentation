@@ -11,6 +11,61 @@ Całość implementacji podzielono na trzy główne segmenty funkcjonalne.
     do bazy danych.	\\
 	\includegraphics[width=\linewidth]{data_pipeline_flowchart.png}
 
+    \subsection{Klasy wykorzystywane w potoku przetwarzania danych}
+    \begin{itemize}
+        \item \textbf{BRVDataIntermediate}\\
+    \end{itemize}
+            \begin{center}
+                \begin{tabular}{|l|l|l|}
+                    \hline
+                    Pole & Typ & Opis \\
+                    \hline
+                    timestamps & NDArray[int64] & stempel czasowy próbki \\
+                    \hline
+                    adc\_normalized\_data & NDArray[float64] & dane z pasów po znormalizowaniu \\
+                    \hline
+                    signal\_maxima & NDArray[float64] & wartości oddechów sygnału
+                    objętego przetwarzaniem \\
+                    \hline
+                    signal\_minima & NDArray[float64] & wartości dolin sygnału
+                    objętego przetwarzaniem \\
+                    \hline
+                \end{tabular}
+            \end{center}
+        \begin{itemize}
+        \item \textbf{BRVDataClean}\\
+        \end{itemize}
+            \begin{center}
+                \begin{tabular}{|l|l|l|}
+                    \hline
+                    Pole & Typ & Opis \\
+                    \hline
+                    timestamps & NDArray[int64] & stempel czasowy próbki \\
+                    \hline
+                    adc\_data & NDArray[float64] & dane z pasów po oczyszczeniu \\
+                    \hline
+                \end{tabular}
+            \end{center}
+        \begin{itemize}
+        \item \textbf{BRVDataFeatures}\\
+        \end{itemize}
+        Postać analogiczna do postaci wektora cech.
+        \begin{center}
+            \begin{verbatim}
+    {
+        "bpm": NDArray[float64] 
+        "avg_breath_depth": NDArray[float64] 
+        "avg_breath_depth_std_dev": NDArray[float64] 
+        "phases_avg_values": NDArray[float64]
+        "breath_shape": NDArray[float64] 
+        "breath_length_variability": NDArray[float64]
+        "breath_amplitude_variability": NDArray[float64]
+        "belt_share": NDArray[float64]  
+        "belt_share_std": NDArray[float64] 
+    }
+\end{verbatim}
+        \end{center}
+
 \section{Architektura systemu}
 Kod realizuje pełny potok przetwarzania danych (pipeline) – od surowych odczytów
 z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne moduły to:
