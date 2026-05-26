@@ -35,6 +35,92 @@ poniższym diagramem pakietów UML:\\
 \section{Klasyfikatory} %MJ
 
 \section{Dane} %MJ
+\subsection{Koncepcja ogólna}
+Podobnie jak w innych częściach projektu dane zostały podzielone na trzy główne kategorie:
+\begin{itemize}
+    \item {
+        \textbf{Dane surowe(ang. \textit{raw data})} - dane pozyskane z kamizellki pomiarowej
+         opisane w sekcji \ref{raw_data}.
+        }
+    \item {
+        \textbf{Dane wyczyszczone(ang. \textit{clean data})} - \textbf{dane surowe} po przejściu 
+        przez procedurę data processing opisaną w sekcji \ref{clean_data}
+        }
+    \item {
+        \textbf{Dane cech(ang. \textit{feature data})} - dane cech wyekstrahowanych z 
+        \textbf{danych wyczyszczonych} opisane w sekcji \ref{subsection:extraction}.
+        }
+\end{itemize}
+
+Dodatkowo struktura folderów została wzbogacona o folder \textit{identifier} zawierający struturę
+folderów zgodną z powyżej opisaną, stworzoną do przechowywania plików tymczasowych niezbędnych do 
+poprawnego działania metody \verb|identify_person| klasy \verb|BRICSModelWrapper|.
+
+\subsection{Pobieranie danych}
+Ta część projektu została od początku zaprojektowana z myślą o ścisłej współpracy z bazą danych
+i dostępem do danych poprzez opisanego w sekcji \textcolor{red}{TODO} hooka. W celu pobrania danych
+z bazy w użyciu jest mechanizm \verb|download_measurement()|, który zgodnie z zadanym
+zestawem kryteriów pobiera najnowsze dane dla wszystkich osób (klas) znajdujących się
+w parametrach zapytania. Następnie wywaływana jest funckja \verb|load_features_from_database_zip|,
+której zadaniem jest załadowanie danych cech do odpowiedniego folderu w strukturze projektu.
+Dane te muszą zostać w odpowiedni sposób oetykietowane - nazwa pliku staje się etykietą i 
+przyjęta zostaje konwencja:
+\begin{center}
+    feature\_\{unikalny identyfikator osoby w bazie danych\}.jsonl
+\end{center}
+Na tak spreparowanych plikach wykonywane sa operacje opisane w sekcjach poniżej.
+
+\subsection{Parsowanie cech}
+W powyższej podsekcji wspomniana została procedura zapisu plików wyekstrahowanych cech do
+odpowiedniej lokalizacji w drzewie projektu. Aby te dane stały się użeteczne należy przygotować
+dla nich parser - funckję \verb|parse_features_from_data|. Funkcja ta zmienia dane z plików .jsonl
+w obiekt klasy \verb|FeatureData| typu \verb|Tensor| z biblioteki \textit{PyTorch}. Dodatkowo
+na podstawie wierszy nagłówkowych, pozyskuje etykiety do danych, które również trafiają do obiektu.
+Całość sparsowanych danych oraz etykiet zostaje zapisana do obiektu klasy \verb|ModelData|, 
+który stanow główny nośnik danych w tej części projektu i opisany został w sekcji \textcolor{red}{TODO}.
+
+Dane feature\_id.jsonl mają następującą postać:
+\begin{verbatim}
+    {
+        {"person_id": "_", "condition": "_", "activity": "_"}
+        {"bpm": _, "avg_breath_depth": _, "avg_breath_depth_std_dev": _, 
+        "phases_avg_values1": _, "phases_avg_values2": _, "phases_avg_values3": _, 
+        "phases_avg_values4": _, "breath_shape1": _, "breath_shape2": _, 
+        "breath_shape3": _, "breath_shape4": _, "breath_length_variability": _, 
+        "breath_amplitude_variability": _, "belt_share1": _, "belt_share2": _, 
+        "belt_share3": _, "belt_share4": _, "belt_share5": _, "belt_share_std1": _, 
+        "belt_share_std2": _, "belt_share_std3": _, "belt_share_std4": _, "belt_share_std5": _}
+        ...
+        {"bpm": _, "avg_breath_depth": _, "avg_breath_depth_std_dev": _, 
+        "phases_avg_values1": _, "phases_avg_values2": _, "phases_avg_values3": _, 
+        "phases_avg_values4": _, "breath_shape1": _, "breath_shape2": _, 
+        "breath_shape3": _, "breath_shape4": _, "breath_length_variability": _, 
+        "breath_amplitude_variability": _, "belt_share1": _, "belt_share2": _, 
+        "belt_share3": _, "belt_share4": _, "belt_share5": _, "belt_share_std1": _, 
+        "belt_share_std2": _, "belt_share_std3": _, "belt_share_std4": _, "belt_share_std5": _}
+    }
+\end{verbatim},
+gdzie każdy kolejny obiekt \textit{JSON} reprezentuje kolejny dwuminutowy segment danych, z którego
+te cechy zostały wyznaczone. Po parsowaniu, już w postaci macierzowej wszystkie pliki z cechami
+(o strukturze przedstawionej powyżej) znajdujące się w folderze \verb|.\data\features| prezentują
+się następująco:
+\begin{verbatim}
+    tensor([[ 1.1991, -2.1468, -1.0432,  ..., -0.0324,  0.3909,  0.1339],
+            [ 0.9716, -0.0349, -0.8515,  ..., -0.4965,  0.3156, -0.5367],
+            [ 0.9686,  0.0497, -1.0472,  ...,  1.8403, -0.1354,  0.3660],
+            ...,
+            [-0.0128, -0.6737, -0.8988,  ...,  0.7098,  0.9672, -0.2827],
+            [-0.1824,  0.0486, -0.7419,  ..., -0.9169,  0.5260,  2.5993],
+            [ 0.0471,  0.2167, -0.8263,  ...,  1.2117,  1.4783, -0.9624]])
+    tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6,
+            6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+            8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+            8])
+\end{verbatim}
 
 \section{Model} %JD
 
