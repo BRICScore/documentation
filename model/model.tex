@@ -96,7 +96,7 @@ Poniżej przedstawiono je w formie stabularyzowanej:
 		\hline
 		Metoda & Zwracany typ & Opis \\
 		\hline
-		get\_person(id: int) & str & Zwraca łańcuch znaków będący osobą \\
+		get\_person(id: int) & str & Zwraca łańcuch znaków będący żądaną osobą \\
 		\hline
         identify\_person(input: Path) & str & Zwraca łańcuch znaków będący osobą zidentyfikowaną \\
 		\hline
@@ -108,14 +108,21 @@ Poniżej przedstawiono je w formie stabularyzowanej:
 \end{center}
 
 \begin{itemize}
-    \item Struktura obiektu \textbf{ModelData} - jest to 
+    \item Struktura obiektu \textbf{ModelData} - jest to kontener przechowujący poprzednie dwie Klasy
+    oraz obiekty DataLoader potrzebne przy przygotowywaniu kolejnych serii danych do epok.
 \end{itemize}
 \begin{center}
 	\begin{tabular}{|l|l|l|}
 		\hline
 		Pole & Typ & Opis \\
 		\hline
-		measurement\_id & str & identyfikator pomiaru \\
+		feature\_data & FeatureData & Obiekt z danymi cech \\
+		\hline
+        model\_wrapper & BRICSModelWrapper & Obiekt z parametrami i modelem \\
+		\hline
+        train\_loader & DataLoader & Obiekt seryjnego ładowania danych \\
+		\hline
+        feature\_data & FeatureData & Obiekt seryjnego ładowania danych \\
 		\hline
 	\end{tabular}
 \end{center}
