@@ -280,9 +280,22 @@ To co zostało przedstawione na diagramie, to przepływ danych podczas wywołani
     Gdzie:
     \\\( x \) to punkt danych
     \\\( \overline{x} \) to średnia z kolumny
-    \\\( \sigma \) to odchylenie standardowe
+    \\\( \sigma \) to odchylenie standardowe danych w kolumnie
 
-    \item elo
+    \item \textbf{Fill data loaders} - etap polegający na załadowaniu etykiey, jak i
+    przeskalowanych cech do obiektów \texttt{DataLoader} zarówno treningowych jak i testowych.
+    To właśnie tutaj następuje podział zbioru na treningowy i testowy.
+
+    \item \textbf{Training loop} - etap, w którym przez nasz model przeprowadzamy dane,
+    on zapisuje wynik, liczy funkcję straty i na jej podstawie przeprowadza propagację wsteczną.
+
+    \item \textbf{Test loop} - etap walidacyjny, gdzie dane z \texttt{DataLoader} są analizowane
+    pod kątem poprawności etykiety po przejściu przez model. Wynikiem tej fazy jest dokładność
+    modelu po liczbie epok zdefiniowanej wcześniej.
+
+    \item \textbf{BRICSModelWrapper} - ostatni etap, czyli załadowanie zmian do klasy okalającej
+    model i zapisanie wyników. Po tej fazie występuje również odgórne zapytanie od interfejsu
+    graficznego o zapisanie modelu, jednak nie jest to częścią opisywanego skryptu, a całego przepływu.
 \end{enumerate}
 
 \section{Aplikacja} %JD
