@@ -291,7 +291,8 @@ To co zostało przedstawione na diagramie, to przepływ danych podczas wywołani
 
     \item \textbf{Test loop} - etap walidacyjny, gdzie dane z \texttt{DataLoader} są analizowane
     pod kątem poprawności etykiety po przejściu przez model. Wynikiem tej fazy jest dokładność
-    modelu po liczbie epok zdefiniowanej wcześniej.
+    modelu po liczbie epok zdefiniowanej wcześniej. Dodatkowo, tworzona jest również macierz
+    pomyłek dla danych, ale będzie ona przedstawiona szerzej w sekcji aplikacji.
 
     \item \textbf{BRICSModelWrapper} - ostatni etap, czyli załadowanie zmian do klasy okalającej
     model i zapisanie wyników. Po tej fazie występuje również odgórne zapytanie od interfejsu
