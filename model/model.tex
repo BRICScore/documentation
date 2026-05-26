@@ -130,13 +130,159 @@ Poniżej przedstawiono je w formie stabularyzowanej:
 \subsection{Model nauczania maszynowego}
 
 \subsubsection{Architektura sieci neuronowej}
-Nasza sieć została stworzona w następującej postaci
+Nasza sieć została stworzona w następującej postaci:
 \begin{center}
-\includegraphics{model_architecture.png}
+\includegraphics[width=0.75\linewidth]{model_architecture.png}
 \end{center}
+Posiada ona 3 warstwy odpowiadające za przetwarzanie danych:
+\begin{itemize}
+    \item \textbf{input}
+    \\ Rozmiarem wejścia dla tej warstwy jest liczba cech w pojedynczym wektorze cech.
+    Dodatkowo, wyjście tej warstwy, w postaci 32 wartości wstępnych cech, jest przekazywane do funkcji aktywacji ReLU przed
+    dalszym przetwarzaniem.
+    \item \textbf{hidden}
+    \\ Liczba wejść do neuronów wejściowych w tej warstwie to 32. Liczba ta jest podyktowana
+    głównie optymalizacją przetwarzania równoległego na rdzeniach karty graficznej, które
+    działają optymalnie dla wartości będących potęgą 2.
+    Dodatkowo, wyjście tej warstwy w postaci 64, bardziej wyszczególnionych cech,
+    również przekazywane jest do funkcji aktywacji ReLU przed dalszym przetwarzaniem.
+    \item \textbf{output}
+    \\ Rozmiar wejścia tej warstwy to 64 i jest to ostatnia warstwa naszego modelu, w której
+    dokonujemy klasyfikacji osób, więc wyjściem będzie wektor wartości z poziomem aktywacji dla
+    każdej klasy(osoby), na której trenowany był model. Wartość ta określana jest mianem logita.
+    Nie są to więc bezpośrednio prawdopodobieństwa klas, co oznacza, że jeżeli chcemy takowe
+    uzyskać, należy wywołać na wyjściu funkcję \texttt{softmax}, bądź jeżeli interesuje nas tylko
+    najwyższa wartość, funkcję \texttt{argmax}.
+\end{itemize}
 
-\subsubsection{Założenia treningowe}
+\subsection{Założenia treningowe}
+W celu wytrenowania naszego modelu musieliśmy poczynić pewne założenia i przygotowywania
+projektu, tak aby należycie uporządkować naszą przestrzeń pracy. Kluczowe było sformalizowanie
+poniższych zagadnień:
+    \subsubsection{Sposób przechowywania danych o modelu poza działaniem programu}
+    W celu późniejszego załadowania już wytrenowanego modelu, np. z bazy danych, należało
+    się zastanowić nad formą zapisu parametrów potrzebnych do funkcjonowania. zdecydowaliśmy się
+    więc zapisać 3 poniższe pliki:
+    \begin{itemize}
+        \item \textbf{\texttt{model.pth}} - jest to plik binarny, stworzony przez funkcję zapisu modelu
+        z biblioteki PyTorch. Zawiera on rezultat treningu, czyli zbiór wag neuronów będących
+        rezultatami treningu
+        \item \textbf{\texttt{model.jsonl}} - są to parametry zapisane w formacie \texttt{jsonl}, które
+        umożliwiają nam załadowanie już istniejącego modelu, ponieważ trzymają one informacje
+        zawarte w polach klas okalających model. Zawartość przykładowego pliku
+        prezentuje się następująco:\\
+        \begin{center}
+            \begin{verbatim}
+{
+  "parameters": {
+    "optimizer": "Adam",
+    "criterion": "CrossEntropyLoss",
+    "learning_rate": 0.001
+  },
+  "people_keys": {
+    "0": "person1@poczta.pl",
+    "1": "person2@gmail.com",
+    "2": "person2@onet.pl",
+    "3": "person2@mymail.com",
+  }, 
+  "feature_keys": {
+    "0": "bpm",
+    "1": "avg_breath_depth",
+    "2": "avg_breath_depth_std_dev",
+    "3": "phases_avg_values1",
+    "4": "phases_avg_values2",
+    "5": "phases_avg_values3",
+    "6": "phases_avg_values4",
+    "7": "breath_shape1",
+    "8": "breath_shape2",
+    "9": "breath_shape3",
+    "10": "breath_shape4",
+    "11": "breath_length_variability",
+    "12": "breath_amplitude_variability",
+    "13": "belt_share1",
+    "14": "belt_share2",
+    "15": "belt_share3",
+    "16": "belt_share4",
+    "17": "belt_share5",
+    "18": "belt_share_std1",
+    "19": "belt_share_std2",
+    "20": "belt_share_std3",
+    "21": "belt_share_std4",
+    "22": "belt_share_std5"
+  }
+}
+            \end{verbatim}
+        \end{center}
+        \item \textbf{\texttt{scaler.pkl}} - jest to plik przechowujący parametry użyte podczas
+        skalowania danych do treningu. Jest on wymagany w celach późniejszego wczytania go jako
+        obiektu klasy \texttt{StandardScaler} odpowiedzialnej za skalowanie danych już w środowisku produkcyjnym,
+        ponieważ tam nie posiadamy danych, na których trenowany był model.
+    \end{itemize}
+    \subsubsection{Sposób definiowania hiperparametrów do treningu}
+    W tym celu zdecydowaliśmy się stworzyć osobny plik nazwany \texttt{hyperparameters.py},
+    który zawiera stałe do trenowania takie jak:
+    \begin{itemize}
+        \item \textbf{EPOCHS} - liczba iteracji treningu modelu.
+        \item \textbf{BATCH\_SIZE} - liczba punktów danych (wektorów cech) ładowanych za jednym przejściem
+        przed wywołaniem propagacji wstecznej.
+        \item \textbf{LEARNING\_RATE} - stała szybkości uczenia.
+        \item \textbf{DROPOUT} - stosunek losowych próbek, które należy odrzucić podczas trenowania w celu
+        dywersyfikacji danych.
+    \end{itemize}
+    \subsubsection{Sposób podziału danych treningowych i testowych}
+    Ponieważ nie posiadamy jeszcze bardzo dużej ilości danych, nie zdecydowaliśmy się na
+    zawarcie w naszym procesie uczenia modelu zbioru danych walidacyjnych. W związku z tym
+    zdecydowaliśmy się na najbardziej podstawowy stosunek podziału danych
+    treningowych i testowych \textbf{80\% danych treningowych, 20\% danych testowych}
 
-\subsubsection{Przebieg treningu}
+    \subsubsection{Ustalenie przepływu danych i przebiegu treningu}
+    Nasze dane zdecydowaliśmy się umieścić w klasie \textbf{\texttt{DataLoader}} z biblioteki
+    PyTorch, gdyż jest to wyjątkowo wygodny sposób ładowania danych w seriach w celu zrównoleglenia
+    przetwarzania.\\\\
+    Dodatkowo, na tym etapie należało również wybrać nasz optymalizator i funkcję straty, którymi
+    będziemy się posługiwać przy treningu. Zostały więc wybrane dwa sprawdzone rozwiązania, należace
+    do biblioteki:
+    \begin{itemize}
+        \item optymalizator \textbf{Adam} - jest to opcja lepsza niż alternatywa \textbf{SGD}, ponieważ
+        dla relatywnie małego zbioru danych osiąga podobne wyniki i cechuje się szybszą zbieżnością.
+        Warto jednak wspomnieć, że system został zaprojektowany w taki sposób, by umożliwiał zmianę
+        tego typu parametrów
+        nawet w czasie uczenia, dzięki wcześniej wspomnianemu słownikowi parametrów \texttt{model.jsonl}.
+        \item funkcja straty \textbf{CrossEntropyLoss} - jest to podstawowa funkcja występująca
+        w zadaniach klasyfikacji wieloklasowej, którą udostępnia biblioteka.
+    \end{itemize}
+
+\subsection{Przebieg treningu}
+Trening naszego modelu również został zaplanowany poprzez wspólne wytworzenie diagramu
+przepływu, który prezentuje się następująco:
+\begin{center}
+    \includegraphics[keepaspectratio, width=0.6\linewidth]{model_training_diagram.png}
+\end{center}
+Na podanym schemacie można zaobserwować dwa główne elementy będące pętlami, kolejno:
+trenowania i testu z wynikiem w postaci dokładności.
+\subsubsection{Najważniejsze etapy}
+To co zostało przedstawione na diagramie, to przepływ danych podczas wywołania skryptu
+\texttt{train\_model.py}. w kolejnych etapach realizowane są poszczególne zadania:
+\begin{enumerate}
+    \item \textbf{scale\_data()} - etap opisany został wywołaniem funkcji należącej do skryptu
+    \texttt{parse\_features.py}, której zadaniem jest przekształcenie załadowanych cech zgodnie
+    z formatem przedstawionym w sekcji data dokumentacji, tak, by model skuteczniej uczył
+    się zależności na danych o podobnym rzędzie wielkości.\\\\
+    Funkcja wywołuje \texttt{StandardScaler} z biblioteki PyTorch, który skaluje nasze dane
+    kolumnowo. Oznacza to, że każda kolumna danych, czyli w naszym przypadku wartości danej
+    cechy dla wszystkich pomiarów, jest skalowana zgodnie ze wzorem:
+    \begin{center}
+        \begingroup
+        \Huge
+        \( \frac{x - \overline{x}}{\sigma} \)
+        \endgroup
+    \end{center}
+    Gdzie:
+    \\\( x \) to punkt danych
+    \\\( \overline{x} \) to średnia z kolumny
+    \\\( \sigma \) to odchylenie standardowe
+
+    \item elo
+\end{enumerate}
 
 \section{Aplikacja} %JD
