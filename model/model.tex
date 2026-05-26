@@ -37,5 +37,89 @@ poniższym diagramem pakietów UML:\\
 \section{Dane} %MJ
 
 \section{Model} %JD
+Głównym celem naszego projektu grupowego było stworzenie modelu nauczania maszynowego,
+którego celem była identyfikacja osób na podstawie wzorców oddehowych. W związku z tym należało
+zaplanować technologie i sposób przechowywania informacji o modelu, takich jak: wagi, parametry,
+słownik do etykiet.\\
+\\
+W ramach realizacji sieci neuronowej, zdecydowaliśmy się na użycie biblioteki specjalnie
+przeznaczonej do tego typu zadań czyli \textbf{PyTorch}. Posłuży nam ona nie tylko do trenowania
+modelu, ale także przygotowywania danych i ewaluacji dokładności modelu.
+
+\subsection{Klasy będące pojemnikami na dane}
+Klasy kontenerowe mają na celu uporządkowanie struktury danych wraz z ich metadanymi,
+nie tylko etykietami, lecz również parametrami takimi jak funkcja straty czy liczba wejść i wyjść.
+Poniżej przedstawiono je w formie stabularyzowanej:
+
+\begin{itemize}
+    \item Struktura obiektu \textbf{FeatureData} - jest to kontener przetrzymujące dane w formie
+    dwuwymiarowej tablicy, gdzie każdy rząd jest równoznaczny wektorowi cech z jednego segmentu. Do
+    każdego rzędu przypisana jest również etykieta identyfikująca osobę.
+\end{itemize}
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Pole & Typ & Opis \\
+		\hline
+		data & NDArray[float64] & dwuwymiarowa tablica z danymi \\
+		\hline
+        labels & NDArray[int] & wektor zawierający etykiety danych \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\begin{itemize}
+    \item Struktura obiektu \textbf{BRICSModelWrapper} - jest to klasa umożliwiająca nam przetrzymanie
+    modelu oraz jego parametrów do trenowania czy użytkowania. Dodatkowo są tu również przechowywane
+    słowniki do etykiet oraz cech, przekształcające identyfikatory na łańcuchy znaków.
+    Klasa posiada również metody, które korzystają z wyżej wymienionych słowników, lub z samego
+    modelu.  
+\end{itemize}
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Pole & Typ & Opis \\
+		\hline
+		parameters & dict & Słownik z parametrami treningowymi \\
+		\hline
+        people\_keys & dict & Słownik mapujący id osoby na osobę \\
+		\hline
+        feature\_keys & dict & Słownik mapujący id cechy na cechę \\
+		\hline
+        model & BRICSModel & Klasa modelu \\
+		\hline
+	\end{tabular}
+
+    \medskip Metody zaimplementowane w klasie:
+
+    \begin{tabular}{|l|l|l|}
+		\hline
+		Metoda & Zwracany typ & Opis \\
+		\hline
+		get\_person(id: int) & str & Zwraca łańcuch znaków będący osobą \\
+		\hline
+        identify\_person(input: Path) & str & Zwraca łańcuch znaków będący osobą zidentyfikowaną \\
+		\hline
+        save\_model() & None & Zapisuje model i uzupełnia parametry \\
+		\hline
+        load\_model() & None & Wczytuje model i uzupełnia parametry \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\begin{itemize}
+    \item Struktura obiektu \textbf{ModelData} - jest to 
+\end{itemize}
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Pole & Typ & Opis \\
+		\hline
+		measurement\_id & str & identyfikator pomiaru \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\subsection{Model nauczania maszynowego}
 
 \section{Aplikacja} %JD
