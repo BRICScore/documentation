@@ -85,7 +85,8 @@
 	\end{itemize}
 	
 		\begin{center}
-		\captionof{table}{Opis struktury klasy ModelMetadata}
+		Struktura obiektu \textbf{ModelMetadata}
+		
 		\begin{tabular}{|l|l|l|}
 			\hline
 			Pole & Typ & Opis \\
@@ -94,11 +95,12 @@
 			\hline
 			timestamp & float & timestamp odpowiadający dacie przesłania modelu \\ 
 			\hline
-			filepath\_weights & str & ścieżka do pliku zawierającego wagi modelu \\
+			filepath\_weights & str & ścieżka do pliku zawierającego wagi i hiperparametry modelu \\
 			\hline
-			filepath\_pth & str & ścieżka do pliku zawierającego \\ %TODO - CO? \\
+			filepath\_pth & str & {ścieżka do pliku zawierającego obraz modelu w postaci pliku \textit{.pth}} \\
 			\hline
-			filepath\_scaler & str & ścieżka do pliku zawierającego \\ %TODO - CO? \\
+			filepath\_scaler & str & {ścieżka do pliku zawierającego obiekt StandardScaler przygotowany na 
+			\newline danych przetworzonych podczas trenowania modelu} \\
 			\hline
 		\end{tabular}
 	\end{center}
