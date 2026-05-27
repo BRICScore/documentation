@@ -33,9 +33,211 @@ poniższym diagramem pakietów UML:\\
 \end{itemize}
 
 \section{Klasyfikatory} %MJ
+W ramach tej części projektu zaimplementowane zostały dwa klasyfikatory:
+\begin{itemize}
+    \item {
+        \textbf{Klasyfikator danych oczyszczonych} - klasyfikator szeregów czasowych, którymi są
+        dane pozyskane z kamizelki pomiarowej BRV, poddane opisanemu w sekcji \ref{clean_data} 
+        preprocessingowi.
+    }
+    \item {
+        \textbf{Klasyfikator wybranych cech} - klasyfikator umieszczający segmenty pomiarów w
+        przestrzeni dwuwymiarowej, gdzie osie \textit{OX} i \textit{OY} stanowią wybrane dwie cechy.
+    }
+\end{itemize}
+Znajdują się wewnątrz struktury projektu w folderze \verb|classifiers|, gdzie mają dostęp do 
+dedykowanego katalogu na dane pomocnicze o nazwie \verb|classifier_data|.
+
+\subsection{Klasyfikator danych oczyszczonych}
+Klasyfikator, jak wspomniano powyżej, pracuje na danych poddanych preprocesingowi, a więc na 
+wejście przyjmuje pliki typu \textit{JSONL} w formacie \textit{clean}. Następnie z nazwy plików
+pozyskuje etykiety danych oraz oraz przygotowuje dataloadery - treningowy, zawierający 80\% 
+zbioru danych oraz testowy, zawierający pozostałe 20\%. Zestawy danych zostały wyznaczone przy
+użyciu funkcji \verb|train_test_split| z biblioteki \textit{sklearn}. W ramach projetu rozważane 
+były również dataloadery wyznaczone za pomocą klasy \verb|GroupShuffleSplit| z tej samej biblioteki, 
+jednakże okazały się mniej efektywne. Ze względu na specyfikę i niewielką liczbę danych 
+wejściowych  takie dataloadery prowadziły do grupowania się danych i powstawania znacznych 
+rozbieżności między zbiorami treningowym i testowym - niektóre z klas znajdujących się 
+wewnątrz zbioru testowego nie pojawiały się nigdy w zbiorach treningowych prowadząc do 
+niskiej dokładności na poziomie około \textbf{45\%}.
+
+Pracujemy na klasyfikatorze \verb|LSTM| (ang. \textit{Long Short-Term Memory}) z biblioteki
+\textit{PyTorch} o następujących parametrach: 
+\begin{itemize}
+    \item {input\_size \= 5}
+    \item {hidden\_size \= 128}
+    \item {num\_layers \= 2}
+    \item {batch\_first \= True}
+    \item {dropout \= 0,2}
+    \item {bidirectional \= True}
+\end{itemize}
+Powyższe parametry zostały ustalone drogą eksperymentalną i dają dokładność klasyfikacji
+na poziomie około \textbf{80\%}.
+
+Wykonany został eksperyment na 4 klasach mający na celu sprawdzić skuteczność opisywanego
+procesu. Jego wyniki zaprezentowane oraz opisane są poniżej.   
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{confusion_matrix_raw_data_82.png}
+    \caption{Wykres przedstawiający macierz konfuzji klasyfikatora danych oczyszczonych
+    dla 4 klas}
+\end{figure}
+Klasyfikator dla tego scenariusza uzyskał skuteczność na poziomie \textbf{82,7\%} co 
+stanowiło jeden z najlepszych rezultatów jaki udało się uzyskać. 
+Szczegółowe rezultaty klasyfikacji zostały zawarte w poniższej tabeli:
+	\begin{center}
+		\begin{tabular}{|l|l|l|l|l|}
+			\hline
+			 & Precyzja & Czułość & Miara-f1 & Support \\
+			\hline
+			DS & 0,6667 & 1,0000 & 0,8000 & 6 \\
+			\hline
+			JD & 1,0000 & 0,8750 & 0,9333 & 8 \\ 
+			\hline
+			MJ  & 0,8333 & 0,6250 & 0,7143 & 8 \\
+			\hline
+			MK & 0,8571 & 0,8571 & 0,8571 & 7 \\
+			\hline
+			Dokładność & \_ & 0,8276 & \_ & 29 \\
+			\hline
+			Średnia makro & 0,8393 & 0,8393 & 0,8262 & 29 \\
+			\hline
+			Średnia ważona & 0,8506 & 0,8276 & 0,8269 & 29 \\
+			\hline
+		\end{tabular}
+	\end{center}
+    , gdzie wartości w wierszu nagłówkowym oznaczają odpowiednio:
+    \begin{itemize}
+        \item {\textbf{Precyzja} - wartość określająca, jaki procent wszystkich przewidywań 
+        pozytywnych był rzeczywiście poprawny. 
+        }
+        \item {\textbf{Czułość} - wartość określająca, procent wszystkich rzeczywistych 
+        przypadków pozytywnych model poprawnie wykrył.
+        }
+        \item {\textbf{Miara-f1} - wartość ta równoważy powyższe dwie stanowiąc ich średnią
+        harmoniczną. Znajduje zastosowanie przy niezbalansowanych zbiorach danych
+        }
+        \item {\textbf{Support} - liczba punktów danych danej klasy w zbiorze testowym}
+    \end{itemize}
+
+    Z powyższych wyników można wywnioskować, że model najskuteczniej identywikował osoby
+    oznaczone wtykietami \textit{JD} i \textit{MK} oraz, że mniejsza liczba elementów o 
+    etykietach \textit{MJ} i \textit{DS} mogła się przełożyć na słabsze wyniki w tym
+    obszarze. Dodatkowo widzimy, że mimo wszystko mamy do czyniania ze zbalansowanym 
+    zbiorem dannych, ponieważ miara-f1 nie odstaje od pozostałych wartości.
+
+Uzyskane rezultaty pokazują zasadność prób identyfikacji osoby (w tym przypadku jest to 
+klasyfikacja do klasy) przy użyciu wyłącznie sygnału oddechowego. Pokazują też w jakim 
+stopniu następuje poprawa względem klasufikacji po danych czysto surowych - bez przejścia
+przez preprocessing. Dodatkowo, co zostanie przedstawione w dalszej części dokumentu,
+zasadnym okazuje się identyfikacja przy użyciu modelu neuronowego - dokładność
+klasyfikacji wzrasta do ponad 90\%.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{confusion_matrix_raw_data_59.png}
+    \caption{Wykres przedstawiający macierz konfuzji klasyfikatora danych surowych
+    dla 4 klas}
+\end{figure}
+
+Powyższy wykres prezentuje wynik klasyfikacji danych surowych z kamizelki pomiarowej, bez
+preprocessingu. Takie dane osiągają skuteczność klasyfikacji na poziomie około \textbf{60\%}.
+
+\subsection{Klasyfikator wybranych cech}
+Skrypt realizujący tą sekcję umieszcza punkty danych (segmenty) w przestrzeni dwóch cech, które zostały
+wskazane przez użytkownika albo zostały (jest to opcja domyślna) wybrane automatycznie jako
+dwie najbardziej skuteczne cechy. Zostało to wyznaczone przy użyciu macierzy kowariancji - 
+funckja \verb|cov| z biblioteki \textit{NumPy}. Dla każdej pary cech w takiej macierzy 
+wyznaczana jest wartość niesionej informacji, która następnie jest łączona z etykietami
+tej pary cech i zwracana jako \verb|tuple| tych wartości.
+
+Taka macierz dla naszego zestawu cech prezentuje się następująco i pozwala algorytmowi 
+wyciągnać następujące wnioski - najlepsza para cech zależy od zbioru danych aktualnie
+klasyfikowanych, ale wśród najlepszych cech pojawia się zazwyczaj \textbf{długość wdechu}
+oraz \textbf{odchylenie standardowe średniej głębokości oddechu}.
+
+\begin{center}
+    \begin{verbatim}
+        [[ 1.01449275e+00 -7.22106146e-01 -7.75380188e-01 -8.11778748e-01
+        -8.81172614e-02 -7.37541075e-01 -1.29269850e-01  5.78023143e-01
+        -7.15918733e-01  5.24679993e-01  6.14196318e-01 -3.07151514e-01
+        3.67257932e-01  1.38373991e-01 -8.55973066e-02 -5.98514388e-02
+        3.53569790e-02 -1.31985366e-01  4.19415816e-02 -4.55340894e-01
+        3.64180002e-01  1.54672420e-01 -2.83404851e-01]
+        ...
+         [-3.07151514e-01  2.35948706e-01  4.80083310e-01  3.29185366e-01
+        3.13911413e-01  2.88907792e-02  5.91788533e-01 -3.13289266e-01
+        4.26860719e-01 -5.42659206e-01 -5.06516346e-03  1.01449275e+00
+        3.67276804e-01  4.24694604e-04 -1.44316297e-02  2.97652829e-03
+        -9.28482093e-02  8.58167741e-02  5.12701104e-01 -2.85062961e-01
+        -6.97949297e-01 -1.19686140e-01  3.37307501e-01]]
+    \end{verbatim}
+\end{center}
+
+Po przygotowaniu przestrzeni cech skrypt wykonuje dwie rzeczy:
+\begin{itemize}
+    \item {\textbf{klasyfikację SVM (ang. {\textit{Support Vector Machine}})} - odbywa 
+    się ona przy użyciu wytrenowanej (w ramach działania skryptu) pary liniowych 
+    wektorów nośnych i użycia ich do rozdzielenia płaszczyzną każej pary osób należącej do zbioru
+    danych}
+    \item {\textbf{klasyfikację NN (ang. {\textit{Neural Network}})} - odbywa 
+    się ona przy użyciu wytrenowanej (w ramach działania skryptu) sieci neuronwej, której
+    zadaniem jest klasyfikacja do klasy dla każdej pary osób należącej do zbioru danych}
+\end{itemize} 
+
+\subsubsection{Klasyfikacja SVM}
+Klasyfikator działa dla dwóch cechy zapisanych w obiekcie \verb|best_pair| efektywnie
+sprowadzając problem do klasyfikatora binarnego. Trenuje w sposób liniowy 
+\verb|SVC(kernel="linear")|, czyli szuka prostej będącej granicą decyzyjną, która
+najlepiej rozdziela punkty oby klas. Dla takiej prostej wizualizuje podział 
+jak na wykresie zamieszczonym poniżej oraz wylicza dokładność. Całość odbywa się
+na tym samym zbiorze danych będącym jednocześnie danymi treningowymi jak i testowymi.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{SVM_classifier.png}
+    \caption{Wykres przedstawiający binarny klasyfikator SVM rozdzielający dwie klasy}
+\end{figure}
+
+\subsubsection{Klasyfikacja NN}
+Klasyfikator NN działa w zupełnie inny sposób. Dla tych samych dwóch cech początkowo
+dokonuje translacji etykiet danych na liczby przy użyciu funkcji \verb|create_person_map()|,
+a następnie buduje małą sieć neuronową o następującej strukturze:
+\begin{itemize}
+    \item {wejście: 2 cechy},
+    \item {uryte warstwy: 6 i 10 neuronów},
+    \item {wyjście: 4 klasy} 
+\end{itemize}
+Parametry modelu są następujące:
+\begin{itemize}
+    \item {funkcja straty: CrossEntropyLoss}
+    \item {optymalizator: Adam}
+    \item {stała szybkości uczenia: 0,01}
+\end{itemize}
+
+Po treningu dla modelu obliczana jest trafność predykcji oraz tworzona macierz pomyłek,
+a także wykres przedstawiający klasyfikacje z oznaczonymi pomyłkami. Podobnie jak w 
+przypadku poprzedniego klasyfikatora całość odbywa się na tym samym zbiorze danych 
+będącym jednocześnie danymi treningowymi jak i testowymi.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{NN_classifier.png}
+    \caption{Wykres przedstawiający macierz konfuzji klasyfikatora NN dla 4 klas}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{NN_classifier_dots.png}
+    \caption{Wykres przedstawiający predykcje klas dla 4 klas}
+\end{figure}
+
+Dla powyższych danych i wykresów model osiągnął skuteczność \textbf{78,57\%}. Widzimy, że
+dane są skumulowane, co prowadzi do wielu pomyłek na złączeniach cech. Prowadzi to do 
+oczywistego wniosku, że 2 cechy są niewystarczające do podziału więcej niż dwóch osób -
+wystarczają jako klasyfikator binarny co widać po skuteczności klasyfikatora SVM.
 
 \section{Dane} %MJ
-\subsection{Koncepcja ogólna}
 Podobnie jak w innych częściach projektu dane zostały podzielone na trzy główne kategorie:
 \begin{itemize}
     \item {
