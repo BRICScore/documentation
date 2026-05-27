@@ -1,0 +1,51 @@
+\chapter{Płytka pośrednicząca w komunikacji}
+    Aby usprawnić pobieranie danych przy pomocy kamizelki BRV utworzona została płytka pośrednia, która ma za zadanie odbierać dane przekazywane szeregowo i wysyłać je dalej przy pomocy technologii Bluetooth. W tym rozdziale omówiona zostanie budowa płytki, oraz struktura zaimplementowanego oprogramowania.
+    W tym momencie płytka pośrednia udostępnia następujące usługi:
+    \begin{itemize}
+        \item {\textbf{BRICS BLE} - serwer Bluetooth LE w trybie Peripheral}
+        \item {\textbf{BRICS Serial} - wielowątkowa aplikacja pobierająca szeregowo dane z kamizelki BRV}
+        \item {\textbf{BRICS.service}}
+    \end{itemize}
+    Usługi te są dostępne razem z podłączoną kamizelką BRV i mają na celu jednynie usprawnienie przekazywania danych i ograniczenie utraty danych podczas pomiarów.
+
+    \section {Architektura płytki}
+        Płytka została zrealizowana przy pomocy mikroprocesora Raspberry Pi Zero W, na którym zainstalowany został system operacyjny Raspbian 32-bit. Posiada 64 GB pamięć w postaci karty micro SD.
+        \\ \\
+        Schemat podłączeń: \\
+        % TODO
+
+    \section {Wielowątkowa aplikacja pośrednicząca}
+        Do obsługi współbieżnego przetwarzania danych zaimplementowana została wielowątkowa aplikacja. \\
+        Uruchomienie aplikacji powoduje uruchomienie dwóch wątków:
+        \begin{itemize}
+            \item{\textbf{BRVBluetoothServer} - wątek obsługujący działanie serwera Bluetooth, którego specyfikacja zostanie omówiona w dalszej części dokumentu.}
+            \item{\textbf{BRVSerialConnection} - wątek obsługujący szeregowe pobieranie pakietów danych z kamizelki BRV.}
+        \end{itemize}
+        Komunikacja pomiędzy wątkami została zrealizowana przy pomocy bibliotek:
+        \begin{itemize}
+            \item{\textbf{queue} - biblioteka udostępniająca kolejkę FIFO z wbudowanym mechanizmem blokowania}
+            \item{\textbf{asyncio} - biblioteka umożliwiająca asynchroniczne uruchamianie kodu}
+            \item{\textbf{threading} - biblioteka umożliwiająca tworzenie i kontrolowanie wątków}
+        \end{itemize}
+        Dane otrzymane na porcie szeregowym są umieszczane w tej kolejce i zdejmowane przez wątek obsługujący serwer Bluetooth. W przypadku, w którym aplikacja napotka błąd lub nieobsłużony wyjątek wątki są niszczone i aplikacja jest uruchamiana ponownie.
+    \section {Serwer Bluetooth}
+        W celu utworzenia serwera BLE wykorzystane zostały biblioteki:
+        \begin{itemize}
+            \item{\textbf{bluez} - podstawowa biblioteka służaca do tworzenia połączeń wykorzystujących technologię Bluetooth}
+            \item{\textbf{bluez-peripheral} - bliblioteka służąca do tworzenia serwerów BLE wykorzystujących bibliotekę Bluez, oraz GATT API}
+            \item{\textbf{dbus} - biblioteka służąca do komunikacji z wykorzystaniem głównej szyny danych}
+        \end{itemize}
+        Utworzony serwer składa się z dwóch klas, jedna z nich stanowi deklaracje serwisu udostępnianego przez serwer Bluetooth, a druga obsługę wątka uruchamiającego serwer Bluetooth.
+        \\ \\
+        Serwer działa w 2 następujących po sobie fazach:
+        \begin{enumerate}
+            \item{\textbf{Uruchamianie} - podczas tej fazy serwer musi zadeklarować swoje serwisy, charakterystyki, adapter, agent i rozgłaszanie. Dane o serwisie i charakterystyce dostępnej na płytce definiowane są w klasie \textbf{BRVDataService}, a sposób rozgłaszania, agent oraz adapter definiowane są podczas 
+            inicjalizacji serwera w klasie \textbf{BRVBluetoothServer}. Ponadto, podczas inicjalizacji wątek dostaje od systemu szynę danych d-bus, na której wykonywana będzie konieczna komunikacja ze sterownikami Bluetooth i kolejno inicjalizowane są kolejne elementy serwera.}
+            \item{\textbf{Działanie} - podczas tej fazy kolejno zdejmowane są kolejne pakiety z kolejki FIFO, oraz rozdzielane na mniejsze aby umożliwić ich transport przy pomocy Bluetooth. Aby wysłać pakiet na dostępnej charakterystyce serwisu uruchamiana jest metoda \textbf{update_BRV_value}, która powoduje wygenerowanie
+            powiadomienia. Wszystkie urządzenia, które są podłączone pod system powiadomień tej charakterystyki otrzymują informacje o jej zmianie i mogą odczytać wartość}
+    \subsection{Działanie serwera Bluetooth LE}
+    Serwer Bluetooth LE (Low Energy) składa się z kilku znaczących komponentów. Głównym z nich jest serwis.
+    % TODO
+    \section {Sygnalizowanie stanu płytki GPIO}
+        % TODO
+    \section {Przykładowy scenariusz użycia}
