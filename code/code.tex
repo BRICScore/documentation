@@ -137,6 +137,14 @@ MeasurementDatasetHook to klasa odpowiadająca za automatyczne wydobycie oraz ud
 		# procesowanie pliku z surowymi danymi
 \end{verbatim}
 
+\section{BRICStoolkit}
+Ze względu na wysoki stopień ponownego wykorzystywania kodu wykonanego w ramach repozytorium \verb*|toolkit| w innych częściach projektu, szczególnie w implementacji modelu - większość rozwiązań opisanych w tej sekcji została zebrana w jedną bibliotekę Python - \verb|brics_toolkit|, możliwą do zainstalowania w lokalnym środowisku deweloperskim.
+ Jej instalację można przeprowadzić w następujący sposób używając menedżera bibliotek PIP oraz środowiska venv:
+ \begin{verbatim}
+ 	git clone https://github.com/BRICScore/toolkit.git
+ 	pip install -e toolkit
+ \end{verbatim}
+ W ten sposób rozwiązano problem konieczności kopiowania kodu w trakcie pracy członków zespołu.
 
 % flow w funkcjach: main -> data_processing -> kolejne poniższe
 % etapy jako sekcje rozdziału kod:
