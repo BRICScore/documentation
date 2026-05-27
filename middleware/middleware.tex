@@ -15,10 +15,11 @@
 
     \section {Wielowątkowa aplikacja pośrednicząca}
         Do obsługi współbieżnego przetwarzania danych zaimplementowana została wielowątkowa aplikacja. \\
-        Uruchomienie aplikacji powoduje uruchomienie dwóch wątków:
+        Uruchomienie aplikacji powoduje uruchomienie trzech wątków:
         \begin{itemize}
             \item{\textbf{BRVBluetoothServer} - wątek obsługujący działanie serwera Bluetooth, którego specyfikacja zostanie omówiona w dalszej części dokumentu.}
             \item{\textbf{BRVSerialConnection} - wątek obsługujący szeregowe pobieranie pakietów danych z kamizelki BRV.}
+            \item{\textbf{BRVLedDisplay} - wątek obsługujący sygnalizowanie przy pomocy dołączonych diod o aktywności i stanie pracy kolejnych komponentów.}
         \end{itemize}
         Komunikacja pomiędzy wątkami została zrealizowana przy pomocy bibliotek:
         \begin{itemize}
@@ -44,8 +45,24 @@
             powiadomienia. Wszystkie urządzenia, które są podłączone pod system powiadomień tej charakterystyki otrzymują informacje o jej zmianie i mogą odczytać wartość}
         \end{enumerate}
             \subsection{Działanie serwera Bluetooth LE}
-    Serwer Bluetooth LE (Low Energy) składa się z kilku znaczących komponentów. Głównym z nich jest serwis.
-    % TODO
+    Serwer Bluetooth LE (Low Energy) składa się z kilku znaczących komponentów. Głównym z nich jest serwis, który zgodnie z protokołem GATT serwis zawiera w sobie charakterystykę. Jest ona ustawiona w tryb Indicate, co umożliwia otrzmywanie komunikatów ACK po wysłaniu pakietów.
     \section {Sygnalizowanie stanu płytki GPIO}
-        % TODO
+        W ramach aplikacji sygnalizującej stan pracy płytki obsługiwane jest działanie 3 diod: sygnalizującej prace płytki, sygnalizującej odbieranie danych przez port szeregowy, oraz sygnalizującej działanie serwera Bluetooth. Sterowanie działaniem diod odbywa się przy pomocy map bitowych, których stan jest regularnie brany pod uwagę podczas działania programu.
+        \\ \\
+        Możliwe stany diod:
+        \begin{itemize}
+            \item{dioda sygnalizująca działanie płytki świeci się stałym światłem - płytka działa}
+            \item{dioda sygnalizująca działanie płytki mruga - działa aplikacja obsługująca przekazywanie danych}
+            \item{dioda sygnalizująca działanie serwera mruga - działa serwer Bluetooth i dane są aktywnie przekazywane}
+            \item{dioda sygnalizująca działanie portu szeregowego mruga - pobierane są dane z portu szeregowego}
+        \end{itemize}
     \section {Przykładowy scenariusz użycia}
+        Płytka może zostać użyta w następujący sposób:
+        \begin{enumerate}
+            \item{Podłaczenie płytki do zasilania}
+            \item{Uruchomienie programu odbierającego dane}
+            \item{Zapaliła się dioda sygnalizująca działanie serwera Bluetooth i w programie odbierającym dane widać podłączenie do serwera}
+            \item{Podłaczenie płytki do kamizelki BRV i rozpoczęcie pomiaru}
+            \item{Zakończenie pomiaru i odpięcie kamizelki BRV od zasilania}
+            \item{Odłaczenie płytki od prądu}
+        \end{enumerate}
