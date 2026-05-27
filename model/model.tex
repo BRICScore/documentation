@@ -612,6 +612,25 @@ To co zostało przedstawione na diagramie, to przepływ danych podczas wywołani
     graficznego o zapisanie modelu, jednak nie jest to częścią opisywanego skryptu, a całego przepływu.
 \end{enumerate}
 
+\subsection{Wyniki}
+Dla tak zadanych parametrów oraz procedury treningu modelu udało się osiągnąć następujące rezultaty:
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{confusion_matrix_model_88.png}
+    \captionof{figure}{Wykres przedstawiający wyjściową macierz konfuzji modelu dla dziewięciu klas}
+\end{minipage}
+
+Udało się osiągnąć dokładność na poziomie \textbf{88,24\%}. Na powyższym wykresie jesteśmy w 
+stanie zaobserwować co następuje:
+
+\begin{itemize}
+    \item {prawie równomiernie rozłożony zbiór testowy, co może świadczyc o miarodajej metodzie jego wyznaczania
+     i poprawnym zbiorze danych,}
+    \item {brak jednej z klas w zbiorze testowym (klasa o numerze 4),}
+    \item {macierz konfuzji przypominającą macierz diagonalną, co świadczy o wysokiej dokładności modelu.}
+\end{itemize}
+
 \section{Aplikacja} %JD
 Aplikacja w naszym repozytorium uruchamiana jest poprzez uruchomienie w linii poleceń
 skryptu \texttt{main.py}. Jest to nasz pokazowy produkt i sposób zobrazowania wykonanej pracy
