@@ -260,7 +260,7 @@ poprawnego działania metody \verb|identify_person| klasy \verb|BRICSModelWrappe
 
 \subsection{Pobieranie danych}
 Ta część projektu została od początku zaprojektowana z myślą o ścisłej współpracy z bazą danych
-i dostępem do danych poprzez opisanego w sekcji \textcolor{red}{TODO} hooka. W celu pobrania danych
+i dostępem do danych poprzez data hooka opisanego w sekcji \ref{dataHook}. W celu pobrania danych
 z bazy w użyciu jest mechanizm \verb|download_measurement()|, który zgodnie z zadanym
 zestawem kryteriów pobiera najnowsze dane dla wszystkich osób (klas) znajdujących się
 w parametrach zapytania. Następnie wywaływana jest funckja \verb|load_features_from_database_zip|,
@@ -279,27 +279,31 @@ dla nich parser - funckję \verb|parse_features_from_data|. Funkcja ta zmienia d
 w obiekt klasy \verb|FeatureData| typu \verb|Tensor| z biblioteki \textit{PyTorch}. Dodatkowo
 na podstawie wierszy nagłówkowych, pozyskuje etykiety do danych, które również trafiają do obiektu.
 Całość sparsowanych danych oraz etykiet zostaje zapisana do obiektu klasy \verb|ModelData|, 
-który stanow główny nośnik danych w tej części projektu i opisany został w sekcji \textcolor{red}{TODO}.
+który stanow główny nośnik danych w tej części projektu i opisany został w sekcji \ref{modeldata}.
 
 Dane feature\_id.jsonl mają następującą postać:
 \begin{verbatim}
     {
         {"person_id": "_", "condition": "_", "activity": "_"}
         {"bpm": _, "avg_breath_depth": _, "avg_breath_depth_std_dev": _, 
-        "phases_avg_values1": _, "phases_avg_values2": _, "phases_avg_values3": _, 
-        "phases_avg_values4": _, "breath_shape1": _, "breath_shape2": _, 
-        "breath_shape3": _, "breath_shape4": _, "breath_length_variability": _, 
+        "phases_avg_values1": _, "phases_avg_values2": _, 
+        "phases_avg_values3": _, "phases_avg_values4": _, 
+        "breath_shape1": _, "breath_shape2": _, "breath_shape3": _, 
+        "breath_shape4": _, "breath_length_variability": _, 
         "breath_amplitude_variability": _, "belt_share1": _, "belt_share2": _, 
-        "belt_share3": _, "belt_share4": _, "belt_share5": _, "belt_share_std1": _, 
-        "belt_share_std2": _, "belt_share_std3": _, "belt_share_std4": _, "belt_share_std5": _}
+        "belt_share3": _, "belt_share4": _, "belt_share5": _,
+        "belt_share_std1": _, "belt_share_std2": _, "belt_share_std3": _, 
+        "belt_share_std4": _, "belt_share_std5": _}
         ...
         {"bpm": _, "avg_breath_depth": _, "avg_breath_depth_std_dev": _, 
-        "phases_avg_values1": _, "phases_avg_values2": _, "phases_avg_values3": _, 
-        "phases_avg_values4": _, "breath_shape1": _, "breath_shape2": _, 
-        "breath_shape3": _, "breath_shape4": _, "breath_length_variability": _, 
+        "phases_avg_values1": _, "phases_avg_values2": _, 
+        "phases_avg_values3": _, "phases_avg_values4": _, 
+        "breath_shape1": _, "breath_shape2": _, "breath_shape3": _, 
+        "breath_shape4": _, "breath_length_variability": _, 
         "breath_amplitude_variability": _, "belt_share1": _, "belt_share2": _, 
-        "belt_share3": _, "belt_share4": _, "belt_share5": _, "belt_share_std1": _, 
-        "belt_share_std2": _, "belt_share_std3": _, "belt_share_std4": _, "belt_share_std5": _}
+        "belt_share3": _, "belt_share4": _, "belt_share5": _,
+        "belt_share_std1": _, "belt_share_std2": _, "belt_share_std3": _, 
+        "belt_share_std4": _, "belt_share_std5": _}
     }
 \end{verbatim},
 gdzie każdy kolejny obiekt \textit{JSON} reprezentuje kolejny dwuminutowy segment danych, z którego
@@ -396,6 +400,7 @@ Poniżej przedstawiono je w formie stabularyzowanej:
 \end{center}
 
 \begin{itemize}
+    \label{modeldata}
     \item Struktura obiektu \textbf{ModelData} - jest to kontener przechowujący poprzednie dwie Klasy
     oraz obiekty DataLoader potrzebne przy przygotowywaniu kolejnych serii danych do epok.
 \end{itemize}
