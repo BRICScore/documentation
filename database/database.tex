@@ -27,7 +27,7 @@
 			\hline
 			Pole & Typ & Opis \\
 			\hline
-			measurement\_id & str & identyfikator pomiaru \\
+			\_id & str & identyfikator pomiaru \\
 			\hline
 			timestamp & float & timestamp odpowiadający dacie rozpoczęcia pomiaru \\ 
 			\hline
@@ -55,8 +55,6 @@
 				\hline 
 			\end{tabular}
 		\end{center}
-			
-			
 			
 			\begin{center}
 				Struktura obiektu \textbf{BioData}
@@ -86,9 +84,30 @@
 				\caption{Przykładowy rekord metadanych pomiaru}
 			\end{figure}
 	\begin{itemize}
-		\item{\textbf{models}  - wersje modelu używane w systemie BRICS}
-		%TODO - MODEL
+		\item{\textbf{models}  - najlepsza wersja modelu używana w systemie BRICS}
 	\end{itemize}
+	
+		\begin{center}
+		Struktura obiektu \textbf{ModelMetadata}
+		
+		\begin{tabular}{|l|l|l|}
+			\hline
+			Pole & Typ & Opis \\
+			\hline
+			\_id & str & identyfikator modelu \\
+			\hline
+			timestamp & float & timestamp odpowiadający dacie przesłania modelu \\ 
+			\hline
+			filepath\_weights & str & ścieżka do pliku zawierającego wagi modelu \\
+			\hline
+			filepath\_pth & str & ścieżka do pliku zawierającego \\ %TODO - CO? \\
+			\hline
+			filepath\_scaler & str & ścieżka do pliku zawierającego \\ %TODO - CO? \\
+			\hline
+		\end{tabular}
+	\end{center}
+	
+	Ze względu na konieczność ochrony wytworzonego modelu, publicznie udostępniane są jedyne algorytmy oraz narzędzia potrzebne do jego wytworzenia - sama implementacja modelu jest przechowywana jedynie w bazie danych lub lokalnie, po pobraniu i/lub wytworzeniu takiego, u członka zespołu projektowego.
 	
 	\section{API}
 		W celu komunikacji z wyżej wymienioną bazą danych zostało stworzone REST API, mające na celu ograniczenie dostępu oraz utworzenie warstwy abstrakcji do interakcji z bazą danych. API zostało zrealizowane z użyciem framework'a FastAPI oraz implementacji serwera WWW w technologii Uvicorn.
@@ -100,7 +119,10 @@
 		\item{\textbf{PUT /measurements/upload} - służący do umieszczania oraz edycji wykonanych pomiarów}
 		\item{\textbf{DELETE /measurements/delete} - służący do usuwania pomiarów}
 		
-		%TODO - MODEL ENDPOINTY
+		Analogicznie, dla modelu istnieją:
+		\item{\textbf{GET /models/download} - służący do pomiaru najnowszej wersji modelu}
+		\item{\textbf{PUT /measurements/upload} - służący do aktualizacji najlepszej wersji modelu}
+		\item{\textbf{DELETE /measurements/delete} - służący do usunięcia modelu}
 	\end{itemize}
 	
 	Dostęp do nich jest realizowany w ramach programu poprzez aplikację stanowiącą warstwę interakcji z kamizelką oraz skrypty dostępu, stanowiące realizację warstwy użytkownika tworzącego zbiór danych, pozwalające na wybranie pliku oraz dodanie odpowiednich metadanych, bądź podanie parametrów wyszukiwania.
@@ -135,6 +157,32 @@
 	\begin{enumerate}
 		\item {Wyszukiwanie metadanych zawierających podany identyfikator}
 		\item {Usunięcie metadanych oraz plików pomiarowych w przypadku znalezienia dokumentu}
+	\end{enumerate}
+	
+	\subsubsection{GET /models/download}
+	W żądaniu HTTP do tego punktu końcowego, ze względu na jego prostotę, nie jest przekazywany żaden parametr lub obiekt. Przetwarzanie tego zapytania można sprowadzić do następujących faz:
+	\begin{enumerate}
+		\item {Wyszukiwanie metadanych modelu w bazie danych}
+		\item {Wydobycie plików modelu i stworzenie archiwum zip z nich złożonych}
+		\item {Wysłanie odpowiedzi na żądanie}
+		\item {Usunięcie folderów tymczasowych utworzonych w ramach przetwarzania żądania}
+	\end{enumerate}
+	
+	\subsubsection{PUT /models/upload}
+	W żądaniu HTTP do tego punktu końcowego, podobnie jak w przypadku plików pomiarowych, część żądania jest procesowana przez proces w tle. Przetwarzanie tego zapytania można sprowadzić do następujących faz:
+	\begin{enumerate}
+		\item {Weryfikacja poprawności formatu metadanych}
+		\item {Wyznaczenie, czy następuje aktualizacja modelu czy utworzenie nowego}
+		\item {Stworzenie struktur potrzebnych do przekazania procesu finalizacji zapisu modelu do kolejki zadań}
+		\item {Utworzenie zadania finalizacji zapisu modelu do bazy danych oraz systemu plików}
+		\item {Odesłanie odpowiedzi o przyjęciu lub odrzuceniu pliku do przetwarzania}
+	\end{enumerate}
+	
+	\subsubsection{DELETE /models/delete}
+	Finalnie, w tym żądaniu HTTP, podobnie jak w przypadku pomiarów, następuje proste usunięcie rekordu modelu i jego plików. Przetwarzanie tego zapytania można sprowadzić do następujących faz:
+	\begin{enumerate}
+		\item {Wyszukiwanie metadanych zawierających podany identyfikator}
+		\item {Usunięcie metadanych oraz plików modelu w przypadku znalezienia dokumentu}
 	\end{enumerate}
 	
 	\subsection{Redis}
