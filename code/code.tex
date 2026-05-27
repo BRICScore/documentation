@@ -1,24 +1,88 @@
-\chapter{Kod źródłowy}
+\chapter{Kod źródłowy - toolkit}
 
 Struktura kodu źródłowego została zaprojektowana w sposób modularny, co pozwala
 na separację logiki przetwarzania sygnałów, ekstrakcji cech oraz wizualizacji rezultatów.
 Całość implementacji podzielono na trzy główne segmenty funkcjonalne.
 
-\section{Przepływ sterowania w projekcie}
+\section{Przepływ sterowania w głównym potoku przetwarzania \textnormal{\texttt{data\_processing\_pipeline}}}
 	Poniżej umieszczona jest wizualizacja przepływu danych przy wywoływaniu
-	poszczególnych skryptów:	
-	\includegraphics[width=\linewidth]{flowchart.png}
+	skryptu \texttt{data\_processing\_pipeline.py}. Zawiera on wywołania z 3 poniższych skryptów w celu
+    przetworzenia i ekstrakcji cech z naszego sygnału, a na koniec wysyła tak przetworzony pomiar
+    do bazy danych.	\\
+	\includegraphics[width=\linewidth]{data_pipeline_flowchart.png}
+
+    \subsection{Klasy wykorzystywane w potoku przetwarzania danych}
+    \begin{itemize}
+        \item \textbf{BRVDataIntermediate}\\
+    \end{itemize}
+            \begin{center}
+                \begin{tabular}{|l|l|l|}
+                    \hline
+                    Pole & Typ & Opis \\
+                    \hline
+                    timestamps & NDArray[int64] & stempel czasowy próbki \\
+                    \hline
+                    adc\_normalized\_data & NDArray[float64] & dane z pasów po znormalizowaniu \\
+                    \hline
+                    signal\_maxima & NDArray[float64] & wartości oddechów sygnału
+                    objętego przetwarzaniem \\
+                    \hline
+                    signal\_minima & NDArray[float64] & wartości dolin sygnału
+                    objętego przetwarzaniem \\
+                    \hline
+                \end{tabular}
+            \end{center}
+        \begin{itemize}
+        \item \textbf{BRVDataClean}\\
+        \end{itemize}
+            \begin{center}
+                \begin{tabular}{|l|l|l|}
+                    \hline
+                    Pole & Typ & Opis \\
+                    \hline
+                    timestamps & NDArray[int64] & stempel czasowy próbki \\
+                    \hline
+                    adc\_data & NDArray[float64] & dane z pasów po oczyszczeniu \\
+                    \hline
+                \end{tabular}
+            \end{center}
+        \begin{itemize}
+        \item \textbf{BRVDataFeatures}\\
+        \end{itemize}
+        Postać analogiczna do postaci wektora cech.
+        \begin{center}
+            \begin{verbatim}
+    {
+        "bpm": NDArray[float64] 
+        "avg_breath_depth": NDArray[float64] 
+        "avg_breath_depth_std_dev": NDArray[float64] 
+        "phases_avg_values": NDArray[float64]
+        "breath_shape": NDArray[float64] 
+        "breath_length_variability": NDArray[float64]
+        "breath_amplitude_variability": NDArray[float64]
+        "belt_share": NDArray[float64]  
+        "belt_share_std": NDArray[float64] 
+    }
+\end{verbatim}
+        \end{center}
 
 \section{Architektura systemu}
 Kod realizuje pełny potok przetwarzania danych (pipeline) – od surowych odczytów
 z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne moduły to:
 
 \begin{itemize}
-    \item \textbf{Przetwarzanie wejścia (Input Processing):}
-        Obsługa plików JSONL, czyszczenie danych (anomalie), wygładzanie spline-ami oraz 
+    \item \textbf{Przetwarzanie wejścia (Initial processing):}
+        Obsługa plików JSONL, parsowanie ich na format odpowiedni do analizy, czyli wartości z
+        5 pasów na przestrzeni czasu.
+    \item \textbf{Przetwarzanie wejścia (Outlier detection):}
+        czyszczenie danych (anomalie), wygładzanie spline-ami oraz 
         segmentacja na 2-minutowe interwały.
-    \item \textbf{Wykrywanie cech (Feature Extraction):} 
+    \item \textbf{Wykrywanie cech (Feature extraction):} 
         Przekształcenie sygnału czasowego na wektory cech (np. BPM, głębokość oddechu, fazy oddechu).
+\end{itemize}
+
+Dodatkowo, system uwzględnia również wizualizację danych jako osobny, opcjonalny etap.
+\begin{itemize}
     \item \textbf{Wizualizacja danych:} 
         Implementacja algorytmów redukcji wymiarowości (PCA, MDS)
         oraz ewaluacja separowalności klas przy użyciu SVM.
@@ -26,7 +90,7 @@ z sensorów kamizelki, aż po wizualizację wyników klasyfikacji. Główne modu
      \item \textbf{Interakcja z archiwami pomiarów:} Warstwa do wydobycia pobranych pomiarów w celu ich dalszego przetwarzania
 \end{itemize}
 
-\section{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{main}}}
+\section{Kluczowe funkcje i przepływ danych wewnątrz skryptu \textnormal{\texttt{initial\_data\_processing}}}
 Przepływ danych opiera się na klasie \texttt{ADC\_data}, która przechowuje
 obrabiane dane na różnych etapach przetworzenia, w tym znormalizowane
 wyniki pomiarów w woltach. Poniżej przedstawiono kluczowe funkcje procesowe:

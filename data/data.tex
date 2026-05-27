@@ -1,4 +1,4 @@
-\chapter{Dane}
+\chapter{Przetwarzanie danych}
 
 % opis kształtu i znaczenia danych
 % 1.dane (co mierzymy, jak to wygląda, co uzyskujemy)
@@ -120,9 +120,9 @@ Przykładowy format przetworzonego segmentu (np. 2-minutowego) wygląda następu
 \end{verbatim}
 
 Tu warto dodać, że dla większości obliczeń wykonywanych w dalszych etapach takich jako
-wyciąganie cech, separacja oddechów czy wykrywanie anomalii pracujemy na sygnale dla środkowego ADC,
-eksperymentalnie ustaliliśmy, że jest on najbardziej miarodajny w kontekście analizy oddechu,
-a praca z jednym czujnikiem znacznie upraszcza cały proces.
+wyciąganie cech, separacja oddechów czy wykrywanie anomalii pracujemy na sygnale dla 
+środkowego ADC (ADC numer 3), eksperymentalnie ustaliliśmy, że jest on najbardziej miarodajny
+w kontekście analizy oddechu, a praca z jednym czujnikiem znacznie upraszcza cały proces.
 
 % II.breath separation, JD
 \subsection{Oddzielanie oddechów}
@@ -205,8 +205,16 @@ oraz wykonanie resamplingu.
 Najpierw sygnał jest resamplowany do za pomocą interpolacji liniowej 
 (funkcja interp1d z biblioteki SciPy) do Częstotliwości 10 Hz, a następnie dzielony na segmenty. 
 Dzięki temu każdy segment zawiera około 1200 próbek. Sam algorytm podziału na segmenty jest raczej
-prosty - rozpoczynamy od początku sygnału i zapisujemy do odpowiednio nazwanych plików
-\texttt{.jsonl} kolejne próbki danych o długości dwóch minut.
+prosty - rozpoczynamy od początku sygnału i zapisujemy do koljnych plików \texttt{.jsonl}
+kolejne próbki danych zawierające się w danym dwuminutowym segmencie. 
+
+Tu warto wspomnieć, że segmenty nie muszą być dwuminutowe, a jedynie obecnie,
+po konsultacjach oraz analizie, zdecydowaliśmy się na takich pracować. Głównym
+powodem było zachowanie równowagi pomiędzy długością semgmentu - tak aby jeden
+pomiar oferował wiele segmentów do analizy, a ilością danych w pojedynczym 
+segmencie - musi być to miarodajna próbka ludzkiego oddechu, z której da się
+pozyskać zestaw określonych cech. Dla innych zastosowań projektu np. identyfikacji
+osoby w czasie rzeczywistym długość segmentów ulegnie zmianie do 10 sekund. 
 
 % V.feature extraction, JD
 \subsection{Ekstrakcja cech}
@@ -214,14 +222,15 @@ prosty - rozpoczynamy od początku sygnału i zapisujemy do odpowiednio nazwanyc
 Po podzieleniu danych na segmenty, a więc ostatecznym przygotowaniu ich 
 do analizy, należy rozpocząć proces pozyskiwania informacji potrzebnych do 
 prawidłowego działania klasyfikatora. Sama sieć neuronowa nie potrzebuje 
-zdefiniowanych cech sygnału, by funkcjonować, jednak w celach badawczych, 
-zdecydowano się na ich ekstrakcję ze względu na możliwość sprawdzenia różnic
-we wzorcach oddechowych objętych analizą osób.
+zdefiniowanych cech sygnału, jednak w celach badawczych, zdecydowano się 
+na ich ekstrakcję ze względu na możliwość sprawdzenia różnic we wzorcach oddechowych 
+objętych analizą osób oraz porównanie efektywnści identyfikacji w oparciu o
+zbiór cech z klasyfikacją sygnałów czasowych (ang. \textit{outlier detection}, TSC).
 
 \begin{itemize}
     \item \textbf{Dane wejściowe:} \\
     Zbiór plików zawierających podzielone na segmenty dane z pomiarów po 
-    wszystkich przekształceniach, w których nazwa wyznacza etykietę, ponieważ 
+    wszystkich przekształceniach, w których nazwa wyznacza etykietę. Nazwa pliku 
     zawiera typ aktywności oraz identyfikator osoby
     \item \textbf{Dane wyjściowe:} \\
     Plik wyjściowy
@@ -235,49 +244,49 @@ we wzorcach oddechowych objętych analizą osób.
 
 \begin{itemize}
     \item \texttt{bpm} - liczba oddechów na minutę
-    \item \texttt{breath\_depth} - wyznaczone poprzez uśrednienie wartości szczytów 
+    \item \texttt{avg\_breath\_depth} - wyznaczone poprzez uśrednienie wartości szczytów 
     oddechów w całym segmencie dla środkowego pasa
-    \item \texttt{breath\_depth\_std} - odchylenie standardowe sygnału, jako głębokość 
+    \item \texttt{avg\_breath\_depth\_std\_dev} - odchylenie standardowe sygnału, jako głębokość 
     oddechu dla środkowego pasa
-    \item \texttt{belt\_share} - udział poszczególnych pasów w oddychaniu, reprezentowany 
+    \item \texttt{phase\_avg\_values1-4} - uśrednione wartości długości poszczególnych faz oddychania
+    \item \texttt{breath\_shape1-4} - uśrednione wartości współczynników wielomianu aproksymowanego na wszystkich oddechach
+    \item \texttt{breath\_length\_variability} - jest to średnia kwadratowa kolejnych różnic w długości oddechów \textbf{(RMSSD)}
+    \item \texttt{breath\_amplitude\_variability} - jest to współczynnik wariancji obliczony na podstawie wszystkich amplitud oddechów i ich wariancji \textbf{(CV)}
+    \item \texttt{belt\_share1-5} - udział poszczególnych pasów w oddychaniu, reprezentowany 
     przez 5 wartości, po jednej dla każdego pasa. Jest on wyznaczany poprzez 
     zsumowanie wartości głębokości oddechu dla każdego pasa, tworzy to mianownik 
     ułamka, który liczony jest osobno dla każdego tensometru, gdzie licznikiem jest 
     głębokość oddechu dla tego konkretnego sensora
-    \item \texttt{belt\_share\_std} - wyznaczany jest on analogicznie do powyższego, korzysta 
+    \item \texttt{belt\_share\_std1-5} - wyznaczany jest on analogicznie do powyższego, korzysta 
     jednak z wyżej wspomnianych odchyleń standardowych sygnału, jako głębokości
-    \item \texttt{breathing\_phase\_lengths} - jest to wartość średnia czasu trwania kolejnych 
-    faz oddychania, a mianowicie: faza wdechu, pauza po wdechu, faza wydechu, 
-    pauza po wydechu
 \end{itemize}
 
 Ostateczna postać wektora cech:\\
 \begin{verbatim}
     {
-        "bpm": 9.000900090009, 
-        "breath_depth": 0.000508883499999989, 
-        "breath_depth_std": 0.000536447969322273, 
-        "belt_share": [
-            0.22835596917392076, 
-            0.23058806904451593, 
-            0.23666638543899532, 
-            0.11107859100193478, 
-            0.19331098534063318
-        ], 
-        "belt_share_std": [
-            0.22813856117990958, 
-            0.19352652793035194, 
-            0.21559730281491984, 
-            0.16293926980008244, 
-            0.19979833827473617
-        ], 
-        "breathing_phase_lengths": [
-            2488.3888888888887, 
-            105.5, 
-            3351.6111111111113, 
-            72.61111111111111
-        ], 
-        "person": "JD_sit"
+        "bpm": 22.26614295364139, 
+        "avg_breath_depth": 3.900225777541929e-05, 
+        "avg_breath_depth_std_dev": 0.00013306949022660511, 
+        "phases_avg_values1": 940.4347826086956, 
+        "phases_avg_values2": 0.0, 
+        "phases_avg_values3": 1178.7826086956522, 
+        "phases_avg_values4": 103.82608695652173, 
+        "breath_shape1": 9.196209863545878e-08, 
+        "breath_shape2": -6.662249686393455e-06, 
+        "breath_shape3": 9.61982727984441e-05, 
+        "breath_shape4": -0.00042464473377830305, 
+        "breath_length_variability": 545.1113966728349, 
+        "breath_amplitude_variability": 1.1727109719885525, 
+        "belt_share1": 0.3316531281145216, 
+        "belt_share2": 0.0650033517833078, 
+        "belt_share3": 0.1339896910044088, 
+        "belt_share4": 0.2490435239116464, 
+        "belt_share5": 0.22031030518611552, 
+        "belt_share_std1": 0.17940369491358457, 
+        "belt_share_std2": 0.2232564079584426, 
+        "belt_share_std3": 0.2208655713802452, 
+        "belt_share_std4": 0.18995479665889553, 
+        "belt_share_std5": 0.186519529088832
     }
 \end{verbatim}
 
@@ -309,16 +318,21 @@ postępów.
     elementy sygnału. Dzięki temu jesteśmy w stanie zredukować ostateczną ich liczbę, co
     pozytywnie wpływa na ryzyko zbytniego dopasowania oraz pozwala na mniejszy nakład 
     obliczeniowy związany np. ze skorelowanymi zmiennymi.
+    \\\\ Warto dodać, że przedstawione tutaj cechy, oznaczone jako \textbf{"Feature1"} i \textbf{"Feature2"}
+    są kombinacjami liniowymi wszystkich poprzednich cech zgodnie z działaniem obu algorytmów
+    redukcji wymiarowości. Nie są one więc możliwe do bardziej szczegółowego opisania. Dodatkowo, nie
+    wszystkie wektory cech zostały na wykresach przedstawione, gdyż dane zostały obcięte
+    powyżej progu trzech odchyleń standardowych, aby zmaksymalizować czytelność.
 
     \begin{minipage}{\linewidth}
         \centering
-        \includegraphics[width=0.7\textwidth]{MDS.png}
+        \includegraphics[width=0.7\textwidth]{MDS.jpg}
         \captionof{figure}{Cechy po wywołaniu algorytmu MDS przedstawione na dwuwymiarowym wykresie.}
     \end{minipage}
 
     \begin{minipage}{\linewidth}
         \centering
-        \includegraphics[width=0.7\textwidth]{PCA.png}
+        \includegraphics[width=0.7\textwidth]{PCA.jpg}
         \captionof{figure}{Cechy po wywołaniu algorytmu PCA przedstawione na dwuwymiarowym wykresie.}
     \end{minipage}
     
@@ -338,19 +352,19 @@ Za pomocą klasyfikatora SVM, jesteśmy w stanie podzielić zbiór na dwa, poprz
 odpowiedniej hiperpłaszczyzny maksymalizującej margines między dwoma klasami. W związku z tym, że
 jest on klasyfikatorem binarnym, należało wywołać go osobno dla każdej możliwej pary etykiet w
 ogólnym zbiorze zredukowanych cech. W ten sposób uzyskujemy podział dla wszystkich kombinacji
-oraz związaną z nimi dokładność. Poniżej przykłady dla zbioru danych 3 osób.
+oraz związaną z nimi dokładność. Poniżej przykłady dla podzbioru 3 osób.
 \\
-\includegraphics{JD_MJ.png}
+\includegraphics[width=\textwidth,keepaspectratio]{svm629v636.png}
 \\
-Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MJ\_sit: 95.56\%}
+Zmierzona dokładność: \texttt{Accuracy for s197629 and s197636: 100.00\%}
 \\
-\includegraphics{JD_MK.png}
+\includegraphics[width=\textwidth,keepaspectratio]{svm629v291.png}
 \\
-Zmierzona dokładność: \texttt{Accuracy for JD\_sit and MK\_sit: 84.93\%}
+Zmierzona dokładność: \texttt{Accuracy for s197629 and s198291: 96.55\%}
 \\
-\includegraphics{MJ_MK.png}
+\includegraphics[width=\textwidth,keepaspectratio]{svm636v291.png}
 \\
-Zmierzona dokładność: \texttt{Accuracy for MJ\_sit and MK\_sit: 91.07\%}
+Zmierzona dokładność: \texttt{Accuracy for s197636 and s198291: 100.00\%}
 
 % VII. Creating data profiles, MJ
 \section{Tworzenie profili oddechowych osób}
@@ -360,7 +374,8 @@ dla każdej osoby objętej badaniem na podstawie szeregu wyznaczonych cech. Proc
 na wyznaczenie wzorca charakterystycznego oddechu dla konkretnego użytkownika, co może 
 służyć jako punkt odniesienia w dalszych badaniach nad biometryczną identyfikacją lub diagnostyką.
 Wytowrzony profil zawiera zarówno uśrednione wartości kluczowych cech czasowo-amplitudowych,
-jak i reprezentatywny sygnał oddechowy - pojedynczy oddech będący dominantą wśród analizowanych danych.
+jak i reprezentatywny sygnał oddechowy - zestaw 10 oddechów będących dominantą wśród 
+analizowanych danych.
 
 \subsection{Metodyka wyznaczania profilu}
 Tworzenie profilu opiera się na następujących operacjach: 
@@ -409,4 +424,18 @@ Na chwilę obecną wygenerowany profil oddechowy pełni jedną niezwykle istotn�
     \item \textbf{Weryfikacja jakościowa:}
         Pozwala na szybkie porównanie wizualne „typowego” oddechu różnych osób, co potwierdza zasadność użycia 
         algorytmów takich jak MDS czy PCA do ich separacji.
+    \item \textbf{Gererowanie segmentów w celu testowania modelu:}
+        Posiadając zbiór najbardziej reprezentatywnych oddechów dla danej osoby można w prosty 
+        sposób wygenerowac sygnał oddechowy, który powinien stanowić statystycznie poprawną
+        próbkę oddechu danej osoby. Można np. wygenerować segment (zgodnie z zadanymi kryteriami
+        - na chwilę obecną jest to czas trwania) i poddać do klasyfikacji zarówno przy użyciu
+        zestawu wyznaczonych, interpretowalnych cech, jak i \textit{TSC}.
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{generated_signal.png}
+    \captionof{figure}{Przykładowa reprezentacja sygnału oddechowego wygenerowanego w oparciu o
+    powyższy opis.}
+\end{minipage}
+
 \end{itemize}
