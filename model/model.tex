@@ -386,3 +386,46 @@ To co zostało przedstawione na diagramie, to przepływ danych podczas wywołani
 \end{enumerate}
 
 \section{Aplikacja} %JD
+Aplikacja w naszym repozytorium uruchamiana jest poprzez uruchomienie w linii poleceń
+skryptu \texttt{main.py}. Jest to nasz pokazowy produkt i sposób zobrazowania wykonanej pracy
+nad modelem i przetwarzaniem danych. Interfejs został wykonany w całości za pomocą biblioteki Pyside6\\\\
+Jednym z naszych założeń projektowych było zgranie wszystkich naszych repozytoriów w jeden 
+spójny system. Można więc powiedzieć, że poniżej przedstawiony interfejs zapewnia nam taką możliwość.
+
+\includegraphics[keepaspectratio, width=\linewidth]{UI_base_look.png}
+
+Na przedstawionej grafice można zaobserwować główne funkcje naszego interfejsu:
+\begin{itemize}
+\item \textbf{Load files} - przycisk ładujący dane do identyfikacji, tak żeby były
+możliwe do wyświetlenia w liście rozwijalnej znajdującej się obok.
+\item \textbf{Train Model} - przycisk oferujący możliwość trenowania modelu wraz ze
+sprzężeniem zwrotnym w postaci macierzy pomyłek danych testowych.
+\item \textbf{Load Model} - przycisk ładujący model do wykorzystania funkcjonalnosci
+identyfikacji.
+\item \textbf{Download Measurements} - przycisk oferujący możliwość wywołania skryptu
+pobierajacego pomiary z bazy danych.
+\item \textbf{Identification} - przycisk oferujący naszą główną i docelową funkcjonalność
+projektową czyli identyfikację osób na podstawie wzorców oddechowych.
+\end{itemize}
+
+\begin{center}Wyniki podjęcia poszczególnych akcji znajdują się poniżej:\end{center}
+\medskip
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{UI_file_dropdown.png}
+    \captionof{figure}{Interfejs po rozwinięciu listy, po załadowaniu danych}
+\end{minipage}
+
+\medskip
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{UI_train_model.png}
+    \captionof{figure}{Interfejs po wywołaniu funkcji trenowania modelu}
+\end{minipage}
+
+\medskip
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{UI_identification.png}
+    \captionof{figure}{Interfejs po wywołaniu funkcji identyfikacji}
+\end{minipage}
