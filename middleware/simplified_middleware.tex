@@ -1,0 +1,20 @@
+\chapter{Płytka pośrednicząca w komunikacji}
+    Aby usprawnić pobieranie danych przy pomocy kamizelki BRV utworzona została płytka pośrednia, która ma za zadanie odbierać dane przekazywane szeregowo i wysyłać je dalej przy pomocy technologii Bluetooth.
+    Udostępniane usługi:
+    \begin{itemize}
+        \item {\textbf{BRICS BLE} - serwer Bluetooth Low Energy w trybie Peripheral}
+        \item {\textbf{BRICS Serial} - wielowątkowa aplikacja pobierająca szergowo dane z kamizeli BRV}
+        \item {\textbf{BRICS.service}}
+    \end{itemize}
+    \\ \\
+    Płytka została zrealizowana przy pomocy mikroprocesora Raspberry Pi Zero W, na którym zainstalowany został system operacyjny Raspian 32-bit. Posiada 64 GB pamięci w postaci karty micro SD. Jest zasilana przy pomocy gniazda micro-USB.
+    \\ \\
+    Obsługą przesyłania danych zajmuje się wielowątkowa aplikacja. Jeden z wątków - BRVSerial - zajmuje się odbieraniem danych na porcie szeregowym i umieszczanie ich w kolejce.
+    Natomiast drugi wątek zajmuje się w pierwszej fazie uruchomieniem i zdefiniowaniem serwera Bluetooth LE, a w drugiej fazie pobieraniem danych z kolejki, rozdzielaniem ich na miejsze aby umożliwić ich transport, oraz wysyłaniem pakietów. Wysyłanie pakietów jest realizowane poprzez aktualizacje udostępnianej przez serwer charakterystyki, co powoduje wyemitowanie powiadomienia do wszystkich podłączonych stacji.
+\section {Struktura serwera Bluetooth}
+    Serwer Bluetooth LE Peripheral zgodnie ze standardem GATT składa się z:
+    \begin{itemize}
+        \item {\textbf{Serwisu}}
+        \item {\textbf{Charakterystyki} - wartości emitowanej przrez serwe, która może ulec zmianie - w tym wypadku obecny pakiet danych}
+    \end{itemize}
+    
