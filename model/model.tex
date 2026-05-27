@@ -3,8 +3,13 @@
 
 \section{Organizacja repozytorium}
 Nasze repozytorium modelu podzieliliśmy na 4 różne składowe zgodnie z
-poniższym diagramem pakietów UML:\\
-\includegraphics[keepaspectratio,width=\linewidth]{model_structure.png}
+poniższym diagramem pakietów UML:
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=1.0\textwidth]{model_structure.png}
+    \captionof{figure}{Diagram przedstawiający strukturę pakietów w repozytorium BRICSModel}
+\end{minipage}
 
 \begin{itemize}
     \item {
@@ -86,6 +91,7 @@ Klasyfikator dla tego scenariusza uzyskał skuteczność na poziomie \textbf{82,
 stanowiło jeden z najlepszych rezultatów jaki udało się uzyskać. 
 Szczegółowe rezultaty klasyfikacji zostały zawarte w poniższej tabeli:
 	\begin{center}
+        \captionof{table}{Reprezentacja wyników zwracanych przez klasyfikator danych oczyszczonych.}
 		\begin{tabular}{|l|l|l|l|l|}
 			\hline
 			 & Precyzja & Czułość & Miara-f1 & Support \\
@@ -349,6 +355,7 @@ Poniżej przedstawiono je w formie stabularyzowanej:
     każdego rzędu przypisana jest również etykieta identyfikująca osobę.
 \end{itemize}
 \begin{center}
+    \captionof{table}{Opis struktury obiektu FeatureData.}
 	\begin{tabular}{|l|l|l|}
 		\hline
 		Pole & Typ & Opis \\
@@ -368,6 +375,7 @@ Poniżej przedstawiono je w formie stabularyzowanej:
     modelu.  
 \end{itemize}
 \begin{center}
+    \captionof{table}{Opis struktury obiektu BRICSModelWrapper}
 	\begin{tabular}{|l|l|l|}
 		\hline
 		Pole & Typ & Opis \\
@@ -381,9 +389,12 @@ Poniżej przedstawiono je w formie stabularyzowanej:
         model & BRICSModel & Klasa modelu \\
 		\hline
 	\end{tabular}
+\end{center}
 
-    \medskip Metody zaimplementowane w klasie:
+Metody zaimplementowane w klasie:
 
+\begin{center}
+    \captionof{table}{Opis metod zaimplementowanych w ramach klasy BRICSModelWrapper.}
     \begin{tabular}{|l|l|l|}
 		\hline
 		Metoda & Zwracany typ & Opis \\
@@ -405,6 +416,7 @@ Poniżej przedstawiono je w formie stabularyzowanej:
     oraz obiekty DataLoader potrzebne przy przygotowywaniu kolejnych serii danych do epok.
 \end{itemize}
 \begin{center}
+    \captionof{table}{Opis struktury obiektu ModelData.}
 	\begin{tabular}{|l|l|l|}
 		\hline
 		Pole & Typ & Opis \\
@@ -424,9 +436,13 @@ Poniżej przedstawiono je w formie stabularyzowanej:
 
 \subsubsection{Architektura sieci neuronowej}
 Nasza sieć została stworzona w następującej postaci:
-\begin{center}
-\includegraphics[width=0.75\linewidth]{model_architecture.png}
-\end{center}
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{model_architecture.png}
+    \captionof{figure}{Diagram przedstawiający strukturę sieci neuronowej}
+\end{minipage}
+
 Posiada ona 3 warstwy odpowiadające za przetwarzanie danych:
 \begin{itemize}
     \item \textbf{input}
@@ -548,9 +564,13 @@ poniższych zagadnień:
 \subsection{Przebieg treningu}
 Trening naszego modelu również został zaplanowany poprzez wspólne wytworzenie diagramu
 przepływu, który prezentuje się następująco:
-\begin{center}
-    \includegraphics[keepaspectratio, width=0.6\linewidth]{model_training_diagram.png}
-\end{center}
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{model_training_diagram.png}
+    \captionof{figure}{Diagram przepływu przedstawiający procedurę treningu modelu}
+\end{minipage}
+
 Na podanym schemacie można zaobserwować dwa główne elementy będące pętlami, kolejno:
 trenowania i testu z wynikiem w postaci dokładności.
 \subsubsection{Najważniejsze etapy}
@@ -599,7 +619,12 @@ nad modelem i przetwarzaniem danych. Interfejs został wykonany w całości za p
 Jednym z naszych założeń projektowych było zgranie wszystkich naszych repozytoriów w jeden 
 spójny system. Można więc powiedzieć, że poniżej przedstawiony interfejs zapewnia nam taką możliwość.
 
-\includegraphics[keepaspectratio, width=\linewidth]{UI_base_look.png}
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.9\textwidth]{UI_base_look.png}
+    \captionof{figure}{Zrzut ekranu przedstawiający wygląd ekranu startowego UI modelu}
+\end{minipage}
+
 
 Na przedstawionej grafice można zaobserwować główne funkcje naszego interfejsu:
 \begin{itemize}
