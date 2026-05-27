@@ -1,0 +1,638 @@
+\chapter{Model BRICS}
+\label{bricsmodel}
+
+\section{Organizacja repozytorium}
+Nasze repozytorium modelu podzieliliśmy na 4 różne składowe zgodnie z
+poniższym diagramem pakietów UML:\\
+\includegraphics[keepaspectratio,width=\linewidth]{model_structure.png}
+
+\begin{itemize}
+    \item {
+        \textbf{Classifiers} - sekcja poświęcona jest klasyfikatorom i ich danym,
+        które funkcjonują jako dodatkowe rozszerzenia naszej aplikacji. Są to głównie
+        skrypty pozwalające na dodatkową wizualizację i przegląd naszych danych poprzez
+        wykonywanie klasyfikacji na różnych stopniach przetwarzania i jakości danych.
+        }
+    \item {
+        \textbf{Data} - jest to głównie przestrzeń przechowywania danych do nauki
+        naszego głównego klasyfikatora oraz dla klasyfikacji wykorzystywanej w aplikacji,
+        działającej na świeżych plikach z kamizelki.
+        }
+    \item {
+        \textbf{Model} - obszar, w którym przechowujemy większość klas i skryptów
+        potrzebnych do wytrenowania i wdrożenia oraz integracji naszego modelu z aplikacją.
+        Przechowywane są tutaj takie pliki jak: wagi modelu, parametry uczenia modelu,
+        skrypty treningowe, czy definicje klas, będących kontenerami na dane.
+        }
+    \item {
+        \textbf{App} - główne miejsce zarządzania pozostałymi elementami repozytorium,
+        w którym integrujemy mechanizmy klasyfikacji, model oraz zarządzanie nim. Jest to
+        zarówno interfejs do posługiwania się repozytorium, jak i nasz końcow produkt, który
+        mamy na celu rozwijać w projekcie.
+        }
+\end{itemize}
+
+\section{Klasyfikatory} %MJ
+W ramach tej części projektu zaimplementowane zostały dwa klasyfikatory:
+\begin{itemize}
+    \item {
+        \textbf{Klasyfikator danych oczyszczonych} - klasyfikator szeregów czasowych, którymi są
+        dane pozyskane z kamizelki pomiarowej BRV, poddane opisanemu w sekcji \ref{clean_data} 
+        preprocessingowi.
+    }
+    \item {
+        \textbf{Klasyfikator wybranych cech} - klasyfikator umieszczający segmenty pomiarów w
+        przestrzeni dwuwymiarowej, gdzie osie \textit{OX} i \textit{OY} stanowią wybrane dwie cechy.
+    }
+\end{itemize}
+Znajdują się wewnątrz struktury projektu w folderze \verb|classifiers|, gdzie mają dostęp do 
+dedykowanego katalogu na dane pomocnicze o nazwie \verb|classifier_data|.
+
+\subsection{Klasyfikator danych oczyszczonych}
+Klasyfikator, jak wspomniano powyżej, pracuje na danych poddanych preprocesingowi, a więc na 
+wejście przyjmuje pliki typu \textit{JSONL} w formacie \textit{clean}. Następnie z nazwy plików
+pozyskuje etykiety danych oraz oraz przygotowuje dataloadery - treningowy, zawierający 80\% 
+zbioru danych oraz testowy, zawierający pozostałe 20\%. Zestawy danych zostały wyznaczone przy
+użyciu funkcji \verb|train_test_split| z biblioteki \textit{sklearn}. W ramach projetu rozważane 
+były również dataloadery wyznaczone za pomocą klasy \verb|GroupShuffleSplit| z tej samej biblioteki, 
+jednakże okazały się mniej efektywne. Ze względu na specyfikę i niewielką liczbę danych 
+wejściowych  takie dataloadery prowadziły do grupowania się danych i powstawania znacznych 
+rozbieżności między zbiorami treningowym i testowym - niektóre z klas znajdujących się 
+wewnątrz zbioru testowego nie pojawiały się nigdy w zbiorach treningowych prowadząc do 
+niskiej dokładności na poziomie około \textbf{45\%}.
+
+Pracujemy na klasyfikatorze \verb|LSTM| (ang. \textit{Long Short-Term Memory}) z biblioteki
+\textit{PyTorch} o następujących parametrach: 
+\begin{itemize}
+    \item {input\_size \= 5}
+    \item {hidden\_size \= 128}
+    \item {num\_layers \= 2}
+    \item {batch\_first \= True}
+    \item {dropout \= 0,2}
+    \item {bidirectional \= True}
+\end{itemize}
+Powyższe parametry zostały ustalone drogą eksperymentalną i dają dokładność klasyfikacji
+na poziomie około \textbf{80\%}.
+
+Wykonany został eksperyment na 4 klasach mający na celu sprawdzić skuteczność opisywanego
+procesu. Jego wyniki zaprezentowane oraz opisane są poniżej.   
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{confusion_matrix_raw_data_82.png}
+    \caption{Wykres przedstawiający macierz konfuzji klasyfikatora danych oczyszczonych
+    dla 4 klas}
+\end{figure}
+Klasyfikator dla tego scenariusza uzyskał skuteczność na poziomie \textbf{82,7\%} co 
+stanowiło jeden z najlepszych rezultatów jaki udało się uzyskać. 
+Szczegółowe rezultaty klasyfikacji zostały zawarte w poniższej tabeli:
+	\begin{center}
+		\begin{tabular}{|l|l|l|l|l|}
+			\hline
+			 & Precyzja & Czułość & Miara-f1 & Support \\
+			\hline
+			DS & 0,6667 & 1,0000 & 0,8000 & 6 \\
+			\hline
+			JD & 1,0000 & 0,8750 & 0,9333 & 8 \\ 
+			\hline
+			MJ  & 0,8333 & 0,6250 & 0,7143 & 8 \\
+			\hline
+			MK & 0,8571 & 0,8571 & 0,8571 & 7 \\
+			\hline
+			Dokładność & \_ & 0,8276 & \_ & 29 \\
+			\hline
+			Średnia makro & 0,8393 & 0,8393 & 0,8262 & 29 \\
+			\hline
+			Średnia ważona & 0,8506 & 0,8276 & 0,8269 & 29 \\
+			\hline
+		\end{tabular}
+	\end{center}
+    , gdzie wartości w wierszu nagłówkowym oznaczają odpowiednio:
+    \begin{itemize}
+        \item {\textbf{Precyzja} - wartość określająca, jaki procent wszystkich przewidywań 
+        pozytywnych był rzeczywiście poprawny. 
+        }
+        \item {\textbf{Czułość} - wartość określająca, procent wszystkich rzeczywistych 
+        przypadków pozytywnych model poprawnie wykrył.
+        }
+        \item {\textbf{Miara-f1} - wartość ta równoważy powyższe dwie stanowiąc ich średnią
+        harmoniczną. Znajduje zastosowanie przy niezbalansowanych zbiorach danych
+        }
+        \item {\textbf{Support} - liczba punktów danych danej klasy w zbiorze testowym}
+    \end{itemize}
+
+    Z powyższych wyników można wywnioskować, że model najskuteczniej identywikował osoby
+    oznaczone wtykietami \textit{JD} i \textit{MK} oraz, że mniejsza liczba elementów o 
+    etykietach \textit{MJ} i \textit{DS} mogła się przełożyć na słabsze wyniki w tym
+    obszarze. Dodatkowo widzimy, że mimo wszystko mamy do czyniania ze zbalansowanym 
+    zbiorem dannych, ponieważ miara-f1 nie odstaje od pozostałych wartości.
+
+Uzyskane rezultaty pokazują zasadność prób identyfikacji osoby (w tym przypadku jest to 
+klasyfikacja do klasy) przy użyciu wyłącznie sygnału oddechowego. Pokazują też w jakim 
+stopniu następuje poprawa względem klasufikacji po danych czysto surowych - bez przejścia
+przez preprocessing. Dodatkowo, co zostanie przedstawione w dalszej części dokumentu,
+zasadnym okazuje się identyfikacja przy użyciu modelu neuronowego - dokładność
+klasyfikacji wzrasta do ponad 90\%.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{confusion_matrix_raw_data_59.png}
+    \caption{Wykres przedstawiający macierz konfuzji klasyfikatora danych surowych
+    dla 4 klas}
+\end{figure}
+
+Powyższy wykres prezentuje wynik klasyfikacji danych surowych z kamizelki pomiarowej, bez
+preprocessingu. Takie dane osiągają skuteczność klasyfikacji na poziomie około \textbf{60\%}.
+
+\subsection{Klasyfikator wybranych cech}
+Skrypt realizujący tą sekcję umieszcza punkty danych (segmenty) w przestrzeni dwóch cech, które zostały
+wskazane przez użytkownika albo zostały (jest to opcja domyślna) wybrane automatycznie jako
+dwie najbardziej skuteczne cechy. Zostało to wyznaczone przy użyciu macierzy kowariancji - 
+funckja \verb|cov| z biblioteki \textit{NumPy}. Dla każdej pary cech w takiej macierzy 
+wyznaczana jest wartość niesionej informacji, która następnie jest łączona z etykietami
+tej pary cech i zwracana jako \verb|tuple| tych wartości.
+
+Taka macierz dla naszego zestawu cech prezentuje się następująco i pozwala algorytmowi 
+wyciągnać następujące wnioski - najlepsza para cech zależy od zbioru danych aktualnie
+klasyfikowanych, ale wśród najlepszych cech pojawia się zazwyczaj \textbf{długość wdechu}
+oraz \textbf{odchylenie standardowe średniej głębokości oddechu}.
+
+\begin{center}
+    \begin{verbatim}
+        [[ 1.01449275e+00 -7.22106146e-01 -7.75380188e-01 -8.11778748e-01
+        -8.81172614e-02 -7.37541075e-01 -1.29269850e-01  5.78023143e-01
+        -7.15918733e-01  5.24679993e-01  6.14196318e-01 -3.07151514e-01
+        3.67257932e-01  1.38373991e-01 -8.55973066e-02 -5.98514388e-02
+        3.53569790e-02 -1.31985366e-01  4.19415816e-02 -4.55340894e-01
+        3.64180002e-01  1.54672420e-01 -2.83404851e-01]
+        ...
+         [-3.07151514e-01  2.35948706e-01  4.80083310e-01  3.29185366e-01
+        3.13911413e-01  2.88907792e-02  5.91788533e-01 -3.13289266e-01
+        4.26860719e-01 -5.42659206e-01 -5.06516346e-03  1.01449275e+00
+        3.67276804e-01  4.24694604e-04 -1.44316297e-02  2.97652829e-03
+        -9.28482093e-02  8.58167741e-02  5.12701104e-01 -2.85062961e-01
+        -6.97949297e-01 -1.19686140e-01  3.37307501e-01]]
+    \end{verbatim}
+\end{center}
+
+Po przygotowaniu przestrzeni cech skrypt wykonuje dwie rzeczy:
+\begin{itemize}
+    \item {\textbf{klasyfikację SVM (ang. {\textit{Support Vector Machine}})} - odbywa 
+    się ona przy użyciu wytrenowanej (w ramach działania skryptu) pary liniowych 
+    wektorów nośnych i użycia ich do rozdzielenia płaszczyzną każej pary osób należącej do zbioru
+    danych}
+    \item {\textbf{klasyfikację NN (ang. {\textit{Neural Network}})} - odbywa 
+    się ona przy użyciu wytrenowanej (w ramach działania skryptu) sieci neuronwej, której
+    zadaniem jest klasyfikacja do klasy dla każdej pary osób należącej do zbioru danych}
+\end{itemize} 
+
+\subsubsection{Klasyfikacja SVM}
+Klasyfikator działa dla dwóch cechy zapisanych w obiekcie \verb|best_pair| efektywnie
+sprowadzając problem do klasyfikatora binarnego. Trenuje w sposób liniowy 
+\verb|SVC(kernel="linear")|, czyli szuka prostej będącej granicą decyzyjną, która
+najlepiej rozdziela punkty oby klas. Dla takiej prostej wizualizuje podział 
+jak na wykresie zamieszczonym poniżej oraz wylicza dokładność. Całość odbywa się
+na tym samym zbiorze danych będącym jednocześnie danymi treningowymi jak i testowymi.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{SVM_classifier.png}
+    \caption{Wykres przedstawiający binarny klasyfikator SVM rozdzielający dwie klasy}
+\end{figure}
+
+\subsubsection{Klasyfikacja NN}
+Klasyfikator NN działa w zupełnie inny sposób. Dla tych samych dwóch cech początkowo
+dokonuje translacji etykiet danych na liczby przy użyciu funkcji \verb|create_person_map()|,
+a następnie buduje małą sieć neuronową o następującej strukturze:
+\begin{itemize}
+    \item {wejście: 2 cechy},
+    \item {uryte warstwy: 6 i 10 neuronów},
+    \item {wyjście: 4 klasy} 
+\end{itemize}
+Parametry modelu są następujące:
+\begin{itemize}
+    \item {funkcja straty: CrossEntropyLoss}
+    \item {optymalizator: Adam}
+    \item {stała szybkości uczenia: 0,01}
+\end{itemize}
+
+Po treningu dla modelu obliczana jest trafność predykcji oraz tworzona macierz pomyłek,
+a także wykres przedstawiający klasyfikacje z oznaczonymi pomyłkami. Podobnie jak w 
+przypadku poprzedniego klasyfikatora całość odbywa się na tym samym zbiorze danych 
+będącym jednocześnie danymi treningowymi jak i testowymi.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{NN_classifier.png}
+    \caption{Wykres przedstawiający macierz konfuzji klasyfikatora NN dla 4 klas}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{NN_classifier_dots.png}
+    \caption{Wykres przedstawiający predykcje klas dla 4 klas}
+\end{figure}
+
+Dla powyższych danych i wykresów model osiągnął skuteczność \textbf{78,57\%}. Widzimy, że
+dane są skumulowane, co prowadzi do wielu pomyłek na złączeniach cech. Prowadzi to do 
+oczywistego wniosku, że 2 cechy są niewystarczające do podziału więcej niż dwóch osób -
+wystarczają jako klasyfikator binarny co widać po skuteczności klasyfikatora SVM.
+
+\section{Dane} %MJ
+Podobnie jak w innych częściach projektu dane zostały podzielone na trzy główne kategorie:
+\begin{itemize}
+    \item {
+        \textbf{Dane surowe(ang. \textit{raw data})} - dane pozyskane z kamizellki pomiarowej
+         opisane w sekcji \ref{raw_data}.
+        }
+    \item {
+        \textbf{Dane wyczyszczone(ang. \textit{clean data})} - \textbf{dane surowe} po przejściu 
+        przez procedurę data processing opisaną w sekcji \ref{clean_data}
+        }
+    \item {
+        \textbf{Dane cech(ang. \textit{feature data})} - dane cech wyekstrahowanych z 
+        \textbf{danych wyczyszczonych} opisane w sekcji \ref{subsection:extraction}.
+        }
+\end{itemize}
+
+Dodatkowo struktura folderów została wzbogacona o folder \textit{identifier} zawierający struturę
+folderów zgodną z powyżej opisaną, stworzoną do przechowywania plików tymczasowych niezbędnych do 
+poprawnego działania metody \verb|identify_person| klasy \verb|BRICSModelWrapper|.
+
+\subsection{Pobieranie danych}
+Ta część projektu została od początku zaprojektowana z myślą o ścisłej współpracy z bazą danych
+i dostępem do danych poprzez data hooka opisanego w sekcji \ref{dataHook}. W celu pobrania danych
+z bazy w użyciu jest mechanizm \verb|download_measurement()|, który zgodnie z zadanym
+zestawem kryteriów pobiera najnowsze dane dla wszystkich osób (klas) znajdujących się
+w parametrach zapytania. Następnie wywaływana jest funckja \verb|load_features_from_database_zip|,
+której zadaniem jest załadowanie danych cech do odpowiedniego folderu w strukturze projektu.
+Dane te muszą zostać w odpowiedni sposób oetykietowane - nazwa pliku staje się etykietą i 
+przyjęta zostaje konwencja:
+\begin{center}
+    feature\_\{unikalny identyfikator osoby w bazie danych\}.jsonl
+\end{center}
+Na tak spreparowanych plikach wykonywane sa operacje opisane w sekcjach poniżej.
+
+\subsection{Parsowanie cech}
+W powyższej podsekcji wspomniana została procedura zapisu plików wyekstrahowanych cech do
+odpowiedniej lokalizacji w drzewie projektu. Aby te dane stały się użeteczne należy przygotować
+dla nich parser - funckję \verb|parse_features_from_data|. Funkcja ta zmienia dane z plików .jsonl
+w obiekt klasy \verb|FeatureData| typu \verb|Tensor| z biblioteki \textit{PyTorch}. Dodatkowo
+na podstawie wierszy nagłówkowych, pozyskuje etykiety do danych, które również trafiają do obiektu.
+Całość sparsowanych danych oraz etykiet zostaje zapisana do obiektu klasy \verb|ModelData|, 
+który stanow główny nośnik danych w tej części projektu i opisany został w sekcji \ref{modeldata}.
+
+Dane feature\_id.jsonl mają następującą postać:
+\begin{verbatim}
+    {
+        {"person_id": "_", "condition": "_", "activity": "_"}
+        {"bpm": _, "avg_breath_depth": _, "avg_breath_depth_std_dev": _, 
+        "phases_avg_values1": _, "phases_avg_values2": _, 
+        "phases_avg_values3": _, "phases_avg_values4": _, 
+        "breath_shape1": _, "breath_shape2": _, "breath_shape3": _, 
+        "breath_shape4": _, "breath_length_variability": _, 
+        "breath_amplitude_variability": _, "belt_share1": _, "belt_share2": _, 
+        "belt_share3": _, "belt_share4": _, "belt_share5": _,
+        "belt_share_std1": _, "belt_share_std2": _, "belt_share_std3": _, 
+        "belt_share_std4": _, "belt_share_std5": _}
+        ...
+        {"bpm": _, "avg_breath_depth": _, "avg_breath_depth_std_dev": _, 
+        "phases_avg_values1": _, "phases_avg_values2": _, 
+        "phases_avg_values3": _, "phases_avg_values4": _, 
+        "breath_shape1": _, "breath_shape2": _, "breath_shape3": _, 
+        "breath_shape4": _, "breath_length_variability": _, 
+        "breath_amplitude_variability": _, "belt_share1": _, "belt_share2": _, 
+        "belt_share3": _, "belt_share4": _, "belt_share5": _,
+        "belt_share_std1": _, "belt_share_std2": _, "belt_share_std3": _, 
+        "belt_share_std4": _, "belt_share_std5": _}
+    }
+\end{verbatim},
+gdzie każdy kolejny obiekt \textit{JSON} reprezentuje kolejny dwuminutowy segment danych, z którego
+te cechy zostały wyznaczone. Po parsowaniu, już w postaci macierzowej wszystkie pliki z cechami
+(o strukturze przedstawionej powyżej) znajdujące się w folderze \verb|.\data\features| prezentują
+się następująco:
+\begin{verbatim}
+    tensor([[ 1.1991, -2.1468, -1.0432,  ..., -0.0324,  0.3909,  0.1339],
+            [ 0.9716, -0.0349, -0.8515,  ..., -0.4965,  0.3156, -0.5367],
+            [ 0.9686,  0.0497, -1.0472,  ...,  1.8403, -0.1354,  0.3660],
+            ...,
+            [-0.0128, -0.6737, -0.8988,  ...,  0.7098,  0.9672, -0.2827],
+            [-0.1824,  0.0486, -0.7419,  ..., -0.9169,  0.5260,  2.5993],
+            [ 0.0471,  0.2167, -0.8263,  ...,  1.2117,  1.4783, -0.9624]])
+    tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6,
+            6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+            8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+            8])
+\end{verbatim}
+
+\section{Model} %JD
+Głównym celem naszego projektu grupowego było stworzenie modelu nauczania maszynowego,
+którego celem była identyfikacja osób na podstawie wzorców oddehowych. W związku z tym należało
+zaplanować technologie i sposób przechowywania informacji o modelu, takich jak: wagi, parametry,
+słownik do etykiet.\\
+\\
+W ramach realizacji sieci neuronowej, zdecydowaliśmy się na użycie biblioteki specjalnie
+przeznaczonej do tego typu zadań czyli \textbf{PyTorch}. Posłuży nam ona nie tylko do trenowania
+modelu, ale także przygotowywania danych i ewaluacji dokładności modelu.
+
+\subsection{Klasy będące pojemnikami na dane}
+Klasy kontenerowe mają na celu uporządkowanie struktury danych wraz z ich metadanymi,
+nie tylko etykietami, lecz również parametrami takimi jak funkcja straty czy liczba wejść i wyjść.
+Poniżej przedstawiono je w formie stabularyzowanej:
+
+\begin{itemize}
+    \item Struktura obiektu \textbf{FeatureData} - jest to kontener przetrzymujące dane w formie
+    dwuwymiarowej tablicy, gdzie każdy rząd jest równoznaczny wektorowi cech z jednego segmentu. Do
+    każdego rzędu przypisana jest również etykieta identyfikująca osobę.
+\end{itemize}
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Pole & Typ & Opis \\
+		\hline
+		data & NDArray[float64] & dwuwymiarowa tablica z danymi \\
+		\hline
+        labels & NDArray[int] & wektor zawierający etykiety danych \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\begin{itemize}
+    \item Struktura obiektu \textbf{BRICSModelWrapper} - jest to klasa umożliwiająca nam przetrzymanie
+    modelu oraz jego parametrów do trenowania czy użytkowania. Dodatkowo są tu również przechowywane
+    słowniki do etykiet oraz cech, przekształcające identyfikatory na łańcuchy znaków.
+    Klasa posiada również metody, które korzystają z wyżej wymienionych słowników, lub z samego
+    modelu.  
+\end{itemize}
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Pole & Typ & Opis \\
+		\hline
+		parameters & dict & Słownik z parametrami treningowymi \\
+		\hline
+        people\_keys & dict & Słownik mapujący id osoby na osobę \\
+		\hline
+        feature\_keys & dict & Słownik mapujący id cechy na cechę \\
+		\hline
+        model & BRICSModel & Klasa modelu \\
+		\hline
+	\end{tabular}
+
+    \medskip Metody zaimplementowane w klasie:
+
+    \begin{tabular}{|l|l|l|}
+		\hline
+		Metoda & Zwracany typ & Opis \\
+		\hline
+		get\_person(id: int) & str & Zwraca łańcuch znaków będący żądaną osobą \\
+		\hline
+        identify\_person(input: Path) & str & Zwraca łańcuch znaków będący osobą zidentyfikowaną \\
+		\hline
+        save\_model() & None & Zapisuje model i uzupełnia parametry \\
+		\hline
+        load\_model() & None & Wczytuje model i uzupełnia parametry \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\begin{itemize}
+    \label{modeldata}
+    \item Struktura obiektu \textbf{ModelData} - jest to kontener przechowujący poprzednie dwie Klasy
+    oraz obiekty DataLoader potrzebne przy przygotowywaniu kolejnych serii danych do epok.
+\end{itemize}
+\begin{center}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Pole & Typ & Opis \\
+		\hline
+		feature\_data & FeatureData & Obiekt z danymi cech \\
+		\hline
+        model\_wrapper & BRICSModelWrapper & Obiekt z parametrami i modelem \\
+		\hline
+        train\_loader & DataLoader & Obiekt seryjnego ładowania danych \\
+		\hline
+        feature\_data & FeatureData & Obiekt seryjnego ładowania danych \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\subsection{Model nauczania maszynowego}
+
+\subsubsection{Architektura sieci neuronowej}
+Nasza sieć została stworzona w następującej postaci:
+\begin{center}
+\includegraphics[width=0.75\linewidth]{model_architecture.png}
+\end{center}
+Posiada ona 3 warstwy odpowiadające za przetwarzanie danych:
+\begin{itemize}
+    \item \textbf{input}
+    \\ Rozmiarem wejścia dla tej warstwy jest liczba cech w pojedynczym wektorze cech.
+    Dodatkowo, wyjście tej warstwy, w postaci 32 wartości wstępnych cech, jest przekazywane do funkcji aktywacji ReLU przed
+    dalszym przetwarzaniem.
+    \item \textbf{hidden}
+    \\ Liczba wejść do neuronów wejściowych w tej warstwie to 32. Liczba ta jest podyktowana
+    głównie optymalizacją przetwarzania równoległego na rdzeniach karty graficznej, które
+    działają optymalnie dla wartości będących potęgą 2.
+    Dodatkowo, wyjście tej warstwy w postaci 64, bardziej wyszczególnionych cech,
+    również przekazywane jest do funkcji aktywacji ReLU przed dalszym przetwarzaniem.
+    \item \textbf{output}
+    \\ Rozmiar wejścia tej warstwy to 64 i jest to ostatnia warstwa naszego modelu, w której
+    dokonujemy klasyfikacji osób, więc wyjściem będzie wektor wartości z poziomem aktywacji dla
+    każdej klasy(osoby), na której trenowany był model. Wartość ta określana jest mianem logita.
+    Nie są to więc bezpośrednio prawdopodobieństwa klas, co oznacza, że jeżeli chcemy takowe
+    uzyskać, należy wywołać na wyjściu funkcję \texttt{softmax}, bądź jeżeli interesuje nas tylko
+    najwyższa wartość, funkcję \texttt{argmax}.
+\end{itemize}
+
+\subsection{Założenia treningowe}
+W celu wytrenowania naszego modelu musieliśmy poczynić pewne założenia i przygotowywania
+projektu, tak aby należycie uporządkować naszą przestrzeń pracy. Kluczowe było sformalizowanie
+poniższych zagadnień:
+    \subsubsection{Sposób przechowywania danych o modelu poza działaniem programu}
+    W celu późniejszego załadowania już wytrenowanego modelu, np. z bazy danych, należało
+    się zastanowić nad formą zapisu parametrów potrzebnych do funkcjonowania. zdecydowaliśmy się
+    więc zapisać 3 poniższe pliki:
+    \begin{itemize}
+        \item \textbf{\texttt{model.pth}} - jest to plik binarny, stworzony przez funkcję zapisu modelu
+        z biblioteki PyTorch. Zawiera on rezultat treningu, czyli zbiór wag neuronów będących
+        rezultatami treningu
+        \item \textbf{\texttt{model.jsonl}} - są to parametry zapisane w formacie \texttt{jsonl}, które
+        umożliwiają nam załadowanie już istniejącego modelu, ponieważ trzymają one informacje
+        zawarte w polach klas okalających model. Zawartość przykładowego pliku
+        prezentuje się następująco:\\
+        \begin{center}
+            \begin{verbatim}
+{
+  "parameters": {
+    "optimizer": "Adam",
+    "criterion": "CrossEntropyLoss",
+    "learning_rate": 0.001
+  },
+  "people_keys": {
+    "0": "person1@poczta.pl",
+    "1": "person2@gmail.com",
+    "2": "person2@onet.pl",
+    "3": "person2@mymail.com",
+  }, 
+  "feature_keys": {
+    "0": "bpm",
+    "1": "avg_breath_depth",
+    "2": "avg_breath_depth_std_dev",
+    "3": "phases_avg_values1",
+    "4": "phases_avg_values2",
+    "5": "phases_avg_values3",
+    "6": "phases_avg_values4",
+    "7": "breath_shape1",
+    "8": "breath_shape2",
+    "9": "breath_shape3",
+    "10": "breath_shape4",
+    "11": "breath_length_variability",
+    "12": "breath_amplitude_variability",
+    "13": "belt_share1",
+    "14": "belt_share2",
+    "15": "belt_share3",
+    "16": "belt_share4",
+    "17": "belt_share5",
+    "18": "belt_share_std1",
+    "19": "belt_share_std2",
+    "20": "belt_share_std3",
+    "21": "belt_share_std4",
+    "22": "belt_share_std5"
+  }
+}
+            \end{verbatim}
+        \end{center}
+        \item \textbf{\texttt{scaler.pkl}} - jest to plik przechowujący parametry użyte podczas
+        skalowania danych do treningu. Jest on wymagany w celach późniejszego wczytania go jako
+        obiektu klasy \texttt{StandardScaler} odpowiedzialnej za skalowanie danych już w środowisku produkcyjnym,
+        ponieważ tam nie posiadamy danych, na których trenowany był model.
+    \end{itemize}
+    \subsubsection{Sposób definiowania hiperparametrów do treningu}
+    W tym celu zdecydowaliśmy się stworzyć osobny plik nazwany \texttt{hyperparameters.py},
+    który zawiera stałe do trenowania takie jak:
+    \begin{itemize}
+        \item \textbf{EPOCHS} - liczba iteracji treningu modelu.
+        \item \textbf{BATCH\_SIZE} - liczba punktów danych (wektorów cech) ładowanych za jednym przejściem
+        przed wywołaniem propagacji wstecznej.
+        \item \textbf{LEARNING\_RATE} - stała szybkości uczenia.
+        \item \textbf{DROPOUT} - stosunek losowych próbek, które należy odrzucić podczas trenowania w celu
+        dywersyfikacji danych.
+    \end{itemize}
+    \subsubsection{Sposób podziału danych treningowych i testowych}
+    Ponieważ nie posiadamy jeszcze bardzo dużej ilości danych, nie zdecydowaliśmy się na
+    zawarcie w naszym procesie uczenia modelu zbioru danych walidacyjnych. W związku z tym
+    zdecydowaliśmy się na najbardziej podstawowy stosunek podziału danych
+    treningowych i testowych \textbf{80\% danych treningowych, 20\% danych testowych}
+
+    \subsubsection{Ustalenie przepływu danych i przebiegu treningu}
+    Nasze dane zdecydowaliśmy się umieścić w klasie \textbf{\texttt{DataLoader}} z biblioteki
+    PyTorch, gdyż jest to wyjątkowo wygodny sposób ładowania danych w seriach w celu zrównoleglenia
+    przetwarzania.\\\\
+    Dodatkowo, na tym etapie należało również wybrać nasz optymalizator i funkcję straty, którymi
+    będziemy się posługiwać przy treningu. Zostały więc wybrane dwa sprawdzone rozwiązania, należace
+    do biblioteki:
+    \begin{itemize}
+        \item optymalizator \textbf{Adam} - jest to opcja lepsza niż alternatywa \textbf{SGD}, ponieważ
+        dla relatywnie małego zbioru danych osiąga podobne wyniki i cechuje się szybszą zbieżnością.
+        Warto jednak wspomnieć, że system został zaprojektowany w taki sposób, by umożliwiał zmianę
+        tego typu parametrów
+        nawet w czasie uczenia, dzięki wcześniej wspomnianemu słownikowi parametrów \texttt{model.jsonl}.
+        \item funkcja straty \textbf{CrossEntropyLoss} - jest to podstawowa funkcja występująca
+        w zadaniach klasyfikacji wieloklasowej, którą udostępnia biblioteka.
+    \end{itemize}
+
+\subsection{Przebieg treningu}
+Trening naszego modelu również został zaplanowany poprzez wspólne wytworzenie diagramu
+przepływu, który prezentuje się następująco:
+\begin{center}
+    \includegraphics[keepaspectratio, width=0.6\linewidth]{model_training_diagram.png}
+\end{center}
+Na podanym schemacie można zaobserwować dwa główne elementy będące pętlami, kolejno:
+trenowania i testu z wynikiem w postaci dokładności.
+\subsubsection{Najważniejsze etapy}
+To co zostało przedstawione na diagramie, to przepływ danych podczas wywołania skryptu
+\texttt{train\_model.py}. w kolejnych etapach realizowane są poszczególne zadania:
+\begin{enumerate}
+    \item \textbf{scale\_data()} - etap opisany został wywołaniem funkcji należącej do skryptu
+    \texttt{parse\_features.py}, której zadaniem jest przekształcenie załadowanych cech zgodnie
+    z formatem przedstawionym w sekcji data dokumentacji, tak, by model skuteczniej uczył
+    się zależności na danych o podobnym rzędzie wielkości.\\\\
+    Funkcja wywołuje \texttt{StandardScaler} z biblioteki PyTorch, który skaluje nasze dane
+    kolumnowo. Oznacza to, że każda kolumna danych, czyli w naszym przypadku wartości danej
+    cechy dla wszystkich pomiarów, jest skalowana zgodnie ze wzorem:
+    \begin{center}
+        \begingroup
+        \Huge
+        \( \frac{x - \overline{x}}{\sigma} \)
+        \endgroup
+    \end{center}
+    Gdzie:
+    \\\( x \) to punkt danych
+    \\\( \overline{x} \) to średnia z kolumny
+    \\\( \sigma \) to odchylenie standardowe danych w kolumnie
+
+    \item \textbf{Fill data loaders} - etap polegający na załadowaniu etykiey, jak i
+    przeskalowanych cech do obiektów \texttt{DataLoader} zarówno treningowych jak i testowych.
+    To właśnie tutaj następuje podział zbioru na treningowy i testowy.
+
+    \item \textbf{Training loop} - etap, w którym przez nasz model przeprowadzamy dane,
+    on zapisuje wynik, liczy funkcję straty i na jej podstawie przeprowadza propagację wsteczną.
+
+    \item \textbf{Test loop} - etap walidacyjny, gdzie dane z \texttt{DataLoader} są analizowane
+    pod kątem poprawności etykiety po przejściu przez model. Wynikiem tej fazy jest dokładność
+    modelu po liczbie epok zdefiniowanej wcześniej. Dodatkowo, tworzona jest również macierz
+    pomyłek dla danych, ale będzie ona przedstawiona szerzej w sekcji aplikacji.
+
+    \item \textbf{BRICSModelWrapper} - ostatni etap, czyli załadowanie zmian do klasy okalającej
+    model i zapisanie wyników. Po tej fazie występuje również odgórne zapytanie od interfejsu
+    graficznego o zapisanie modelu, jednak nie jest to częścią opisywanego skryptu, a całego przepływu.
+\end{enumerate}
+
+\section{Aplikacja} %JD
+Aplikacja w naszym repozytorium uruchamiana jest poprzez uruchomienie w linii poleceń
+skryptu \texttt{main.py}. Jest to nasz pokazowy produkt i sposób zobrazowania wykonanej pracy
+nad modelem i przetwarzaniem danych. Interfejs został wykonany w całości za pomocą biblioteki Pyside6\\\\
+Jednym z naszych założeń projektowych było zgranie wszystkich naszych repozytoriów w jeden 
+spójny system. Można więc powiedzieć, że poniżej przedstawiony interfejs zapewnia nam taką możliwość.
+
+\includegraphics[keepaspectratio, width=\linewidth]{UI_base_look.png}
+
+Na przedstawionej grafice można zaobserwować główne funkcje naszego interfejsu:
+\begin{itemize}
+\item \textbf{Load files} - przycisk ładujący dane do identyfikacji, tak żeby były
+możliwe do wyświetlenia w liście rozwijalnej znajdującej się obok.
+\item \textbf{Train Model} - przycisk oferujący możliwość trenowania modelu wraz ze
+sprzężeniem zwrotnym w postaci macierzy pomyłek danych testowych.
+\item \textbf{Load Model} - przycisk ładujący model do wykorzystania funkcjonalnosci
+identyfikacji.
+\item \textbf{Download Measurements} - przycisk oferujący możliwość wywołania skryptu
+pobierajacego pomiary z bazy danych.
+\item \textbf{Identification} - przycisk oferujący naszą główną i docelową funkcjonalność
+projektową czyli identyfikację osób na podstawie wzorców oddechowych.
+\end{itemize}
+
+\begin{center}Wyniki podjęcia poszczególnych akcji znajdują się poniżej:\end{center}
+\medskip
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{UI_file_dropdown.png}
+    \captionof{figure}{Interfejs po rozwinięciu listy, po załadowaniu danych}
+\end{minipage}
+
+\medskip
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{UI_train_model.png}
+    \captionof{figure}{Interfejs po wywołaniu funkcji trenowania modelu}
+\end{minipage}
+
+\medskip
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{UI_identification.png}
+    \captionof{figure}{Interfejs po wywołaniu funkcji identyfikacji}
+\end{minipage}

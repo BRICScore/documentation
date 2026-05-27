@@ -21,6 +21,7 @@ System wykorzystuje dwa główne typy sensorów:
 \end{itemize}
 
 \subsection{Charakterystyka surowych danych}
+\label{raw_data}
 Dane przesyłane z urządzenia mają formę strumienia obiektów JSON. Każda próbka zawiera timestamp 
 oraz surowe odczyty binarne z sensorów.
 
@@ -84,6 +85,7 @@ Poniżej przedstawiono przykładowy format surowej próbki:
 % etapy:
 % I.handle input data, MJ
 \subsection{Obsługa danych wejściowych i wstępne przetwarzanie}
+\label{clean_data}
 Pierwszym etapem przetwarzania danych jest ich wczytanie oraz odpowiednie
 sformatowanie. Dane, zgodnie z opisem w punkcie \ref{obiekt_pomiaru}, są przechowywane w 
 plikach \texttt{.jsonl}. Każda linia reprezentuje pojedynczą próbkę zarejestrowaną
