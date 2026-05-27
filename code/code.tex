@@ -192,6 +192,7 @@ DatabaseHandler to klasa odpowiadająca za utworzenie środowiska oraz obsługę
 \end{itemize}
 
 \section{Interakcja z archiwami pomiarów}
+\label{dataHook}
 MeasurementDatasetHook to klasa odpowiadająca za automatyczne wydobycie oraz udostępnienie pomiarów znajdujących się w pobranych archiwum ZIP. Dzięki implementacji wewnętrznego iteratora, możliwe jest następujące użycie klasy:
 \begin{verbatim}
 	mdh = MeasurementDatasetHook(target: raw)

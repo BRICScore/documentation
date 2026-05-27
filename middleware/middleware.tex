@@ -41,9 +41,10 @@
         \begin{enumerate}
             \item{\textbf{Uruchamianie} - podczas tej fazy serwer musi zadeklarować swoje serwisy, charakterystyki, adapter, agent i rozgłaszanie. Dane o serwisie i charakterystyce dostępnej na płytce definiowane są w klasie \textbf{BRVDataService}, a sposób rozgłaszania, agent oraz adapter definiowane są podczas 
             inicjalizacji serwera w klasie \textbf{BRVBluetoothServer}. Ponadto, podczas inicjalizacji wątek dostaje od systemu szynę danych d-bus, na której wykonywana będzie konieczna komunikacja ze sterownikami Bluetooth i kolejno inicjalizowane są kolejne elementy serwera.}
-            \item{\textbf{Działanie} - podczas tej fazy kolejno zdejmowane są kolejne pakiety z kolejki FIFO, oraz rozdzielane na mniejsze aby umożliwić ich transport przy pomocy Bluetooth. Aby wysłać pakiet na dostępnej charakterystyce serwisu uruchamiana jest metoda \textbf{update_BRV_value}, która powoduje wygenerowanie
+            \item{\textbf{Działanie} - podczas tej fazy kolejno zdejmowane są kolejne pakiety z kolejki FIFO, oraz rozdzielane na mniejsze aby umożliwić ich transport przy pomocy Bluetooth. Aby wysłać pakiet na dostępnej charakterystyce serwisu uruchamiana jest metoda \textbf{update\_BRV\_value}, która powoduje wygenerowanie
             powiadomienia. Wszystkie urządzenia, które są podłączone pod system powiadomień tej charakterystyki otrzymują informacje o jej zmianie i mogą odczytać wartość}
-    \subsection{Działanie serwera Bluetooth LE}
+        \end{enumerate}
+            \subsection{Działanie serwera Bluetooth LE}
     Serwer Bluetooth LE (Low Energy) składa się z kilku znaczących komponentów. Głównym z nich jest serwis.
     % TODO
     \section {Sygnalizowanie stanu płytki GPIO}
