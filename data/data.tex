@@ -29,6 +29,7 @@ Poniżej przedstawiono strukturę kluczowych pól surowej próbki:
 
 \begin{table}[H]
 \centering
+\caption{Opis składowych danych surowych.}
 \begin{tabular}{|l|l|p{8cm}|}
 \hline
 \textbf{Klucz sygnału} & \textbf{Typ} & \textbf{Opis fizyczny} \\ \hline
@@ -39,7 +40,6 @@ pasa zapisany w formacie U2\\ \hline
 \texttt{imu1...imu5\_gyr} & deg/s & Prędkość kątowa (orientacja) klatki piersiowej i pleców. \\ \hline
 \texttt{output\_status} & bool & Flaga diagnostyczna określająca poprawność pracy danego sensora. \\ \hline
 \end{tabular}
-\caption{Opis składowych danych surowych.}
 \end{table}
 
 Poniżej przedstawiono przykładowy format surowej próbki:
@@ -353,17 +353,27 @@ odpowiedniej hiperpłaszczyzny maksymalizującej margines między dwoma klasami.
 jest on klasyfikatorem binarnym, należało wywołać go osobno dla każdej możliwej pary etykiet w
 ogólnym zbiorze zredukowanych cech. W ten sposób uzyskujemy podział dla wszystkich kombinacji
 oraz związaną z nimi dokładność. Poniżej przykłady dla podzbioru 3 osób.
-\\
-\includegraphics[width=\textwidth,keepaspectratio]{svm629v636.png}
-\\
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{svm629v636.png}
+    \captionof{figure}{Wykres przedstawiający podział klasyfikatorem SVM dla dwóch klas}
+\end{minipage}
 Zmierzona dokładność: \texttt{Accuracy for s197629 and s197636: 100.00\%}
-\\
-\includegraphics[width=\textwidth,keepaspectratio]{svm629v291.png}
-\\
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{svm629v291.png}
+    \captionof{figure}{Wykres przedstawiający podział klasyfikatorem SVM dla dwóch klas}
+\end{minipage}
 Zmierzona dokładność: \texttt{Accuracy for s197629 and s198291: 96.55\%}
-\\
-\includegraphics[width=\textwidth,keepaspectratio]{svm636v291.png}
-\\
+
+\begin{minipage}{\linewidth}
+    \centering
+    \includegraphics[width=0.7\textwidth]{svm636v291.png}
+    \captionof{figure}{Wykres przedstawiający podział klasyfikatorem SVM dla dwóch klas}
+\end{minipage}
+
 Zmierzona dokładność: \texttt{Accuracy for s197636 and s198291: 100.00\%}
 
 % VII. Creating data profiles, MJ
